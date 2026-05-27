@@ -1,0 +1,129 @@
+@import './fonts.css';
+@import './tailwind.css';
+@import './theme.css';
+
+/* ── CYBER THEME VARIABLES ── */
+:root {
+  --cyber-bg: #0a0f0f;
+  --cyber-green: #00ff9d;
+  --cyber-cyan: #00ffff;
+  --cyber-red: #ff3b3b;
+  --cyber-text: #e0e0e0;
+  --cyber-glass: rgba(255, 255, 255, 0.05);
+  --cyber-border: rgba(255, 255, 255, 0.1);
+  --cyber-glow-green: 0 0 15px #00ff9d;
+  --cyber-glow-cyan: 0 0 15px #00ffff;
+  --cyber-glow-red: 0 0 15px #ff3b3b;
+
+  /* Theme-aware variables (diubah oleh ThemeContext) */
+  --cyber-accent: #00ff9d;
+  --cyber-accent-2: #00ffff;
+  --cyber-danger: #ff3b3b;
+  --cyber-surface: rgba(8,14,14,0.88);
+  --cyber-border-color: rgba(0,255,157,0.18);
+
+  /* Scanline opacity (dikontrol via JS) */
+  --scanline-opacity: 0.03;
+
+  /* Derived glow values */
+  --cyber-glow: 0 0 15px var(--cyber-accent);
+  --cyber-glow-danger: 0 0 15px var(--cyber-danger);
+}
+
+/* ── KEYFRAMES ── */
+@keyframes cyber-sweep {
+  0%   { left: -60%; }
+  100% { left: 110%; }
+}
+
+@keyframes cyber-border-spin {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes cyber-pulse-dot {
+  0%, 100% { opacity: 0.3; transform: scale(0.8); }
+  50%       { opacity: 1;   transform: scale(1.2); }
+}
+
+@keyframes cyber-scan-line {
+  0%   { top: 0%; }
+  100% { top: 100%; }
+}
+
+@keyframes cyber-flicker {
+  0%, 95%, 100% { opacity: 1; }
+  96%           { opacity: 0.4; }
+  98%           { opacity: 0.8; }
+}
+
+@keyframes cyber-fade-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes cyber-slide-right {
+  from { opacity: 0; transform: translateX(-16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #0a0f0f; }
+::-webkit-scrollbar-thumb { background: rgba(0,255,157,0.3); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(0,255,157,0.6); }
+
+/* ── CYBER UI ENHANCEMENT ── */
+
+/* Pulse neon — tombol Analyze saat diklik */
+@keyframes cyber-btn-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(0,255,157,0.7); }
+  70%  { box-shadow: 0 0 0 12px rgba(0,255,157,0); }
+  100% { box-shadow: 0 0 0 0 rgba(0,255,157,0); }
+}
+
+/* CyberSweep — garis bawah input saat fokus */
+@keyframes cyber-sweep-line {
+  0%   { transform: scaleX(0); transform-origin: left; }
+  100% { transform: scaleX(1); transform-origin: left; }
+}
+
+.custom-cursor {
+  position: fixed;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #00ff9d;
+  box-shadow: 0 0 8px #00ff9d, 0 0 16px rgba(0,255,157,0.4);
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+  transition: width 0.15s ease, height 0.15s ease, background 0.15s ease;
+  will-change: transform;
+}
+
+.custom-cursor.cursor-hover {
+  width: 24px;
+  height: 24px;
+  background: transparent;
+  border: 2px solid #00ff9d;
+  box-shadow: 0 0 12px #00ff9d;
+}
+
+.neon-separator {
+  border: none;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #00ff9d, transparent);
+  box-shadow: 0 0 6px rgba(0,255,157,0.5);
+  margin: 24px 0;
+}
+
+.collaborator-card {
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  will-change: transform;
+}
+.collaborator-card:hover {
+  transform: scale(1.03);
+  border-color: #00ff9d;
+  box-shadow: 0 0 20px rgba(0,255,157,0.2);
+}
