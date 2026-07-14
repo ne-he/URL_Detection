@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PhishGuard v2 — Demo</title>
+<style>
+  :root { color-scheme: dark; }
+  body { font-family: system-ui, sans-serif; background: #0d0d0f; color: #eee; max-width: 640px; margin: 4rem auto; padding: 0 1rem; }
+  h1 { font-size: 1.4rem; } h1 span { color: #ff4500; }
+  .row { display: flex; gap: .5rem; margin: 1.2rem 0; }
+  input { flex: 1; padding: .7rem .9rem; border-radius: 8px; border: 1px solid #333; background: #17171a; color: #eee; font-size: 1rem; }
+  button { padding: .7rem 1.2rem; border-radius: 8px; border: 0; background: #ff4500; color: #fff; font-weight: 600; cursor: pointer; }
+  button:disabled { opacity: .5; cursor: wait; }
+  #result { border: 1px solid #333; border-radius: 10px; padding: 1rem; display: none; }
+  #result.danger { border-color: #e5484d; } #result.safe { border-color: #30a46c; }
+  .label { font-size: 1.2rem; font-weight: 700; }
+  .danger .label { color: #e5484d; } .safe .label { color: #30a46c; }
+  .meta { color: #999; font-size: .85rem; margin-top: .4rem; }
+  #err { color: #e5484d; }
+</style>
+</head>
+<body>
+<h1>🛡️ PhishGuard <span>v2</span> — cek URL phishing</h1>
+<p>Backend: FastAPI + MiniLM embedding + Keras. Endpoint diatur lewat kotak di bawah.</p>
+<div class="row"><input id="api" value="http://localhost:7860" title="Base URL API"></div>
+<div class="row">
+  <input id="url" placeholder="https://situs-yang-mau-dicek.com" autofocus>
+  <button id="go">Cek</button>
+</div>
+<div id="result"><div class="label"></div><div class="conf"></div><div class="meta"></div></div>
+<p id="err"></p>
+<script>
+const $ = (s) => document.querySelector(s);
+$('#go').addEventListener('click', check);
+$('#url').addEventListener('keydown', (e) => e.key === 'Enter' && check());
+async function check() {
+  const btn = $('#go'); btn.disabled = true; $('#err').textContent = '';
+  try {
+    const r = await fetch($('#api').value.replace(/\/$/, '') + '/predict', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: $('#url').value }),
+    });
+    const b = await r.json();
+    if (!r.ok) throw new Error(b.detail ? JSON.stringify(b.detail) : r.status);
+    const box = $('#result');
+    box.style.display = 'block';
+    box.className = b.is_dangerous ? 'danger' : 'safe';
+    box.querySelector('.label').textContent = (b.is_dangerous ? '⚠️ ' : '✅ ') + b.label;
+    box.querySelector('.conf').textContent = `Confidence ${b.confidence}% · peluang legitimate ${b.legitimate_chance}%`;
+    box.querySelector('.meta').textContent = `${b.url} · threshold ${b.threshold} · ${b.model_version}`;
+  } catch (e) { $('#err').textContent = 'Gagal: ' + e.message; }
+  finally { btn.disabled = false; }
+}
+</script>
+</body>
+</html>
