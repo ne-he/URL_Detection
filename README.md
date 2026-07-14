@@ -1,5 +1,8 @@
 # 🛡️ Phishing URL Detection System
 
+> **⚠️ Superseded by [PhishGuard v2](https://github.com/ne-he/phishguard).**
+> The backend here has known issues that v2 fixes properly: `*`+credentials CORS, a server that reports "Ready" even when the model failed to load, no input validation, a hardcoded threshold, and zero tests. v2 is a clean rebuild (same model, same response contract) with an honest `/health`, strict URL validation, env-based config, 18 tests, and a regression test that locks the label orientation. This repo stays up as the v1 archive with the original frontend.
+
 A high-performance, deep learning-based application designed to identify and classify phishing URLs. This project is fully containerized and optimized for CPU-only environments to ensure a lightweight and fast deployment process on machines like the MSI Katana.
 
 ## ✨ Key Features
@@ -19,8 +22,8 @@ Follow these steps to get the system running on your local machine:
 
 ### 1. Clone the Repository
 ```bash
-git clone [https://github.com/Adhikaxx88/url-classification.git](https://github.com/Adhikaxx88/url-classification.git)
-cd url-classification
+git clone https://github.com/ne-he/URL_Detection.git
+cd URL_Detection
 ```
 ### 2. Docker compose
 ```bash
