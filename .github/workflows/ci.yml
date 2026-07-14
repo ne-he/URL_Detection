@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  # Cepat (<1 menit): validasi schema + seluruh alur API pakai stub predictor.
+  api-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r backend/requirements-dev.txt
+      - run: pytest backend/tests -x -q --ignore=backend/tests/test_label_orientation.py
+        working-directory: .
+        env:
+          PYTHONPATH: backend
+
+  # Berat (butuh TF + download MiniLM): mengunci orientasi label model asli.
+  # Jalan di push ke main & manual dispatch — tidak memperlambat PR kecil.
+  model-regression:
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r backend/requirements.txt -r backend/requirements-dev.txt
+      - run: pytest backend/tests/test_label_orientation.py -x -q
+        env:
+          PYTHONPATH: backend
