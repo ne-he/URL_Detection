@@ -1,0 +1,293 @@
+# Rencana Implementasi: PhishGuard v2 Enhancement
+
+## Ikhtisar
+
+Implementasi 12 fitur baru menggunakan pendekatan **additive-only** di atas arsitektur React 18 + TypeScript + Vite yang sudah ada. Urutan task dimulai dari fondasi (context, hooks, konfigurasi) lalu naik ke fitur-fitur yang bergantung padanya. Semua kode menggunakan TypeScript.
+
+## Tasks
+
+- [x] 1. Instalasi dependensi dan konfigurasi fondasi
+  - Jalankan: `npm install @react-three/fiber @react-three/drei d3 @types/d3 howler @types/howler canvas-confetti @types/canvas-confetti`
+  - Jalankan: `npm install -D vite-plugin-pwa workbox-window fast-check vitest @testing-library/react @testing-library/jest-dom jsdom`
+  - Buat file `src/app/config.ts` berisi feature flags dari environment variables (`VITE_FEATURE_SHADER`, `VITE_FEATURE_GLOBE`, `VITE_FEATURE_VOICE`, `VITE_FEATURE_GAMIFICATION`)
+  - Buat file `vitest.config.ts` dengan environment `jsdom` dan `setupFiles`
+  - Buat file `src/test/setup.ts` dengan mock localStorage dan `@testing-library/jest-dom`
+  - _Requirements: 2.8, 3.1, 9.2_
+
+- [x] 2. Sistem tema dan CSS Variables
+  - [x] 2.1 Buat `src/app/components/theme/themeConfig.ts` dengan definisi 3 tema (Neon Noir, Crimson Dawn, Arctic Hack), fungsi `applyTheme`, dan fungsi `loadTheme`
+    - Implementasikan interface `ThemeConfig` dan array `THEMES` sesuai desain
+    - _Requirements: 12.1, 12.2, 12.3, 12.4, 12.8_
+  - [ ]* 2.2 Tulis unit test untuk `themeConfig.ts`
+    - Test default theme saat localStorage kosong
+    - Test `applyTheme` mengubah CSS variable yang benar
+    - _Requirements: 12.3, 12.8_
+  - [ ]* 2.3 Tulis property test untuk `themeConfig.ts`
+    - **Property 26: Theme Persistence dan Application Round Trip**
+    - **Validates: Requirements 12.3, 12.4**
+  - [x] 2.4 Tambahkan CSS variables tema ke `src/styles/index.css` (`:root` block dengan semua `--cyber-*` variables)
+    - Tambahkan juga `--scanline-opacity: 0.03` dan derived values (`--cyber-glass`, `--cyber-border`, `--cyber-glow`)
+    - _Requirements: 12.2, 12.7_
+  - [x] 2.5 Buat `src/app/context/ThemeContext.tsx` dengan provider dan hook `useTheme`
+    - Load tema dari localStorage saat mount, expose `currentTheme` dan `setTheme`
+    - _Requirements: 12.3, 12.4, 12.5_
+  - [x] 2.6 Buat `src/app/components/theme/ThemePicker.tsx` — UI 3 kartu tema dengan preview warna
+    - _Requirements: 12.6_
+
+- [x] 3. Hooks utilitas dan ScanContext
+  - [x] 3.1 Buat `src/app/hooks/useLocalStorage.ts` — generic hook untuk read/write localStorage dengan type safety
+    - _Requirements: 5.1, 8.8, 10.5_
+  - [x] 3.2 Buat `src/app/hooks/useOnlineStatus.ts` — hook yang subscribe ke event `online`/`offline` browser
+    - _Requirements: 9.7_
+  - [ ]* 3.3 Tulis property test untuk `useOnlineStatus`
+    - **Property 21: Connection Status Indikator Akurat**
+    - **Validates: Requirements 9.7**
+  - [x] 3.4 Buat `src/app/context/ScanContext.tsx` dengan interface `ScanState`, `ScanResult`, `ScanContextValue`, provider, dan hook `useScanContext`
+    - _Requirements: 1.4, 1.5, 2.3, 2.4_
+
+- [x] 4. Checkpoint — Fondasi siap
+  - Pastikan semua file di task 1–3 ter-compile tanpa error TypeScript. Tanyakan jika ada pertanyaan.
+
+- [x] 5. Sistem gamifikasi
+  - [x] 5.1 Buat `src/app/components/gamification/gamificationLogic.ts` dengan fungsi `calculateLevel`, `checkNewBadges`, `loadGamificationState`, dan `defaultGamificationState`
+    - Implementasikan interface `GamificationState` dan type `BadgeId`, `Level` sesuai desain
+    - _Requirements: 5.1, 5.2, 5.4, 5.9_
+  - [ ]* 5.2 Tulis unit test untuk `gamificationLogic.ts`
+    - Test boundary values level (0, 9, 10, 49, 50, 99, 100)
+    - Test `loadGamificationState` dengan data korup
+    - _Requirements: 5.2, 5.9_
+  - [ ]* 5.3 Tulis property test untuk `gamificationLogic.ts`
+    - **Property 9: Level Calculation adalah Pure Function yang Benar**
+    - **Validates: Requirements 5.2**
+  - [ ]* 5.4 Tulis property test untuk badge assignment
+    - **Property 10: Badge Assignment Konsisten dengan Kondisi Pencapaian**
+    - **Validates: Requirements 5.4, 5.5**
+  - [ ]* 5.5 Tulis property test untuk persistensi gamifikasi
+    - **Property 11: Gamification Data Persisten di LocalStorage**
+    - **Validates: Requirements 5.1, 5.10**
+  - [ ]* 5.6 Tulis property test untuk confetti
+    - **Property 12: Confetti Dipanggil Hanya untuk PHISHING dengan Confidence > 95%**
+    - **Validates: Requirements 5.6**
+  - [x] 5.7 Buat `src/app/context/GamificationContext.tsx` dengan provider dan hook `useGamification`
+    - Expose `gamState`, `recordScan`, `newBadges`, `clearNewBadges`
+    - _Requirements: 5.1, 5.3, 5.5, 5.6, 5.10_
+  - [x] 5.8 Buat `src/app/components/gamification/BadgeNotification.tsx` — toast notifikasi badge dengan animasi Framer Motion
+    - _Requirements: 5.5_
+  - [x] 5.9 Buat `src/app/components/gamification/GamificationWidget.tsx` — widget level, progress bar, dan daftar badge
+    - Tampilkan leaderboard lokal (personal best)
+    - _Requirements: 5.7, 5.8_
+
+- [x] 6. Terminal command mode
+  - [x] 6.1 Buat `src/app/components/terminal/commandParser.ts` dengan fungsi `parseCommand` dan type `CommandResult`
+    - Implementasikan semua 6 perintah: `scan`, `history`, `stats`, `clear`, `theme`, `export logs`
+    - _Requirements: 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 4.9, 4.10_
+  - [ ]* 6.2 Tulis unit test untuk `commandParser.ts`
+    - Test setiap perintah valid dan perintah tidak dikenal
+    - Test `scan` tanpa URL
+    - _Requirements: 4.3, 4.10_
+  - [ ]* 6.3 Tulis property test untuk `commandParser.ts`
+    - **Property 7: Command Parser Menghasilkan Output yang Benar**
+    - **Validates: Requirements 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 4.10**
+  - [x] 6.4 Buat `src/app/components/terminal/useTypewriter.ts` — hook efek typewriter dengan speed yang dapat dikonfigurasi
+    - _Requirements: 4.4, 4.11_
+  - [x] 6.5 Buat `src/app/components/terminal/TerminalModal.tsx` — command palette modal dengan global Ctrl+K listener
+    - Tampilkan output dengan warna hijau neon dan efek typewriter
+    - Pertahankan riwayat output sesi saat hide/show
+    - _Requirements: 4.1, 4.2, 4.11, 4.12_
+  - [ ]* 6.6 Tulis property test untuk persistensi state terminal
+    - **Property 8: Terminal State Persisten saat Hide/Show**
+    - **Validates: Requirements 4.12**
+
+- [x] 7. Checkpoint — Logic layer selesai
+  - Pastikan semua pure functions dan context providers ter-compile dan test lulus. Tanyakan jika ada pertanyaan.
+
+- [x] 8. HUD System dan komponen overlay
+  - [x] 8.1 Buat `src/app/components/hud/ScanlineOverlay.tsx` — overlay fullscreen dengan CSS variable `--scanline-opacity`
+    - Subscribe ke `ScanContext` untuk mengubah opacity saat scanning
+    - _Requirements: 1.4, 1.5_
+  - [ ]* 8.2 Tulis property test untuk scanline opacity
+    - **Property 2: Scanline Opacity Berubah Sesuai State Scan**
+    - **Validates: Requirements 1.4, 1.5**
+  - [x] 8.3 Buat `src/app/components/hud/RadarWidget.tsx` — komponen SVG radar dengan animasi CSS
+    - Subscribe ke `ScanContext` untuk menampilkan pulse merah saat PHISHING
+    - _Requirements: 1.6, 1.7_
+  - [ ]* 8.4 Tulis property test untuk radar
+    - **Property 3: Radar Menampilkan Pulse Merah Saat PHISHING**
+    - **Validates: Requirements 1.7**
+  - [x] 8.5 Buat `src/app/components/hud/HUDNav.tsx` — panel navigasi slide-in dengan Framer Motion variants
+    - Tampilkan status terminal ("> KERNEL ACTIVE", "> ENCRYPTION OK", "> MODEL READY")
+    - Sertakan `ThemePicker` dan `GamificationWidget` di dalam panel
+    - _Requirements: 1.1, 1.2, 1.3, 1.8_
+  - [x] 8.6 Buat `src/app/components/hud/HUDSystem.tsx` — container utama HUD
+    - Implementasikan logika trigger mouse edge (x < 20px) dan fallback tombol toggle
+    - Gunakan Framer Motion `hudVariants` sesuai desain
+    - _Requirements: 1.1, 1.2, 1.9, 1.10_
+  - [ ]* 8.7 Tulis property test untuk HUD visibility
+    - **Property 1: HUD Visibility Round Trip**
+    - **Validates: Requirements 1.1, 1.2**
+
+- [x] 9. WebGL Shader Background
+  - [x] 9.1 Buat `src/app/components/shader/ShaderBackground.tsx` menggunakan `@react-three/fiber`
+    - Implementasikan vertex shader dan fragment shader sesuai desain
+    - Subscribe ke `ScanContext` untuk `uIntensity` dan `uConfidence`
+    - Subscribe ke `ThemeContext` untuk `uAccentColor`
+    - Implementasikan fallback CSS jika WebGL tidak didukung
+    - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.6, 2.7, 2.8_
+  - [ ]* 9.2 Tulis property test untuk shader intensity mapping
+    - **Property 4: Shader Intensity Mapping dari Confidence Score**
+    - **Validates: Requirements 2.3, 2.4, 2.6**
+
+- [x] 10. Threat Meter dan audio feedback
+  - [x] 10.1 Buat `src/app/components/threat/useAudioFeedback.ts` — hook Howler.js dengan fungsi `playBeep(confidence)`
+    - Implementasikan `confidenceToPitch` dan toggle audio dari localStorage
+    - Tangani error autoplay dengan graceful fallback
+    - _Requirements: 10.4, 10.5, 10.6, 10.8_
+  - [ ]* 10.2 Tulis property test untuk audio feedback
+    - **Property 22: Confidence Score Mapping ke Warna dan Pitch Audio**
+    - **Validates: Requirements 10.2, 10.4**
+  - [ ]* 10.3 Tulis property test untuk audio disabled
+    - **Property 23: Audio Tidak Diputar Saat Dinonaktifkan**
+    - **Validates: Requirements 10.6**
+  - [x] 10.4 Buat `src/app/components/threat/ThreatMeter.tsx` — gauge SVG setengah lingkaran
+    - Implementasikan animasi jarum 1.5 detik ease-out dan count-up label
+    - Gunakan `confidenceToColor` untuk warna dinamis
+    - Sertakan toggle audio
+    - _Requirements: 10.1, 10.2, 10.3, 10.5, 10.7_
+
+- [x] 11. Analisis mendalam — Neural Network Visualization
+  - [x] 11.1 Buat `src/app/components/analysis/featureExtractor.ts` dengan fungsi `extractFeatures(url)`
+    - Implementasikan 5 fitur: URL Length, Special Chars, Suspicious Keywords, Subdomain Count, HTTPS
+    - _Requirements: 6.4, 6.5_
+  - [ ]* 11.2 Tulis unit test untuk `featureExtractor.ts`
+    - Test URL dengan kata kunci mencurigakan vs URL bersih
+    - Test URL HTTPS vs HTTP
+    - _Requirements: 6.4_
+  - [ ]* 11.3 Tulis property test untuk feature extractor
+    - **Property 13: Feature Extractor Konsisten dengan Karakteristik URL**
+    - **Validates: Requirements 6.4**
+  - [x] 11.4 Buat `src/app/components/analysis/UrlHeatmap.tsx` — heatmap karakter URL menggunakan warna merah/hijau
+    - Potong URL > 200 karakter dengan tooltip
+    - _Requirements: 6.5, 6.8_
+  - [x] 11.5 Buat `src/app/components/analysis/NeuralNetModal.tsx` — modal D3.js node-link graph
+    - Tampilkan feature importance dengan label persentase
+    - Cache state visualisasi agar tidak re-komputasi saat dibuka kembali
+    - _Requirements: 6.1, 6.2, 6.3, 6.6, 6.7_
+
+- [x] 12. Checkpoint — Komponen analisis selesai
+  - Pastikan ThreatMeter, NeuralNetModal, dan UrlHeatmap render dengan benar. Tanyakan jika ada pertanyaan.
+
+- [x] 13. Kolaborasi real-time
+  - [x] 13.1 Buat `src/app/components/collaboration/useCollaboration.ts` — hook simulasi WebSocket
+    - Implementasikan `startSimulation` dengan interval 5–15 detik dan 20+ mock URL phishing
+    - Fallback otomatis ke simulasi jika WebSocket error
+    - Pertahankan `userId` persisten selama sesi dengan `useRef`
+    - _Requirements: 7.1, 7.2, 7.3, 7.7, 7.8_
+  - [ ]* 13.2 Tulis property test untuk threat board
+    - **Property 14: Threat Board Tidak Pernah Melebihi 10 Entri**
+    - **Validates: Requirements 7.5**
+  - [ ]* 13.3 Tulis property test untuk user ID
+    - **Property 16: User ID Persisten Selama Satu Sesi**
+    - **Validates: Requirements 7.7**
+  - [x] 13.4 Buat `src/app/components/collaboration/ThreatBoard.tsx` — panel daftar URL real-time
+    - Tampilkan notifikasi saat ada URL baru
+    - Klik entri mengisi input URL di `LinkPredictor` via `ScanContext`
+    - _Requirements: 7.1, 7.4, 7.5, 7.6_
+  - [ ]* 13.5 Tulis property test untuk collaboration entry click
+    - **Property 15: Collaboration Entry Click Mengisi Input URL**
+    - **Validates: Requirements 7.6**
+
+- [x] 14. Voice command dan speech synthesis
+  - [x] 14.1 Buat `src/app/components/voice/useVoiceCommand.ts` — hook Web Speech API
+    - Implementasikan `parseVoiceInput` dengan dukungan Bahasa Indonesia dan fallback en-US
+    - Sembunyikan fitur jika browser tidak mendukung
+    - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5, 8.9_
+  - [ ]* 14.2 Tulis property test untuk voice command parser
+    - **Property 17: Voice Command Parser Mengisi URL dengan Benar**
+    - **Validates: Requirements 8.3**
+  - [ ]* 14.3 Tulis property test untuk speech synthesis toggle
+    - **Property 18: Speech Synthesis Toggle Persisten**
+    - **Validates: Requirements 8.8**
+  - [x] 14.4 Buat `src/app/components/voice/VoiceButton.tsx` — tombol mikrofon dengan animasi waveform dan pulse saat aktif
+    - Sertakan toggle speech synthesis yang disimpan ke localStorage
+    - _Requirements: 8.1, 8.6, 8.7, 8.8, 8.10_
+
+- [x] 15. Globe 3D dengan threat intelligence
+  - [x] 15.1 Buat `src/app/components/globe/ThreatGlobe.tsx` menggunakan `@react-three/fiber` dan `@react-three/drei`
+    - Implementasikan fungsi `latLngToVector3` dan `resolveGeoLocation` (ip-api.com + fallback dummy)
+    - Tampilkan titik merah berdenyut, animasi orbit satellite, dan mouse damping
+    - Load data dari localStorage saat mount; tampilkan pesan jika kosong
+    - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.7, 3.8, 3.9_
+  - [ ]* 15.2 Tulis property test untuk geolocation lookup
+    - **Property 5: Geolocation Lookup Dipanggil untuk Setiap URL Phishing**
+    - **Validates: Requirements 3.2**
+  - [ ]* 15.3 Tulis property test untuk globe data dari localStorage
+    - **Property 6: Globe Menampilkan Titik dari Data LocalStorage saat Mount**
+    - **Validates: Requirements 3.8**
+  - [x] 15.4 Buat `src/app/components/globe/ThreatPointModal.tsx` — modal detail titik ancaman saat klik
+    - _Requirements: 3.6_
+
+- [x] 16. PWA dan offline mode
+  - [x] 16.1 Update `vite.config.ts` untuk menambahkan plugin `VitePWA` dengan konfigurasi Workbox
+    - Tambahkan runtime caching untuk `ip-api.com`
+    - _Requirements: 9.2, 9.3_
+  - [x] 16.2 Buat file `public/manifest.webmanifest` dengan semua field yang diperlukan (nama, ikon 192 dan 512, warna tema)
+    - _Requirements: 9.1_
+  - [x] 16.3 Buat `src/app/components/pwa/ConnectionStatus.tsx` — indikator online/offline menggunakan `useOnlineStatus`
+    - _Requirements: 9.7_
+  - [ ]* 16.4 Tulis property test untuk offline mode
+    - **Property 19: Offline Mode Menampilkan Data LocalStorage**
+    - **Validates: Requirements 9.4**
+  - [ ]* 16.5 Tulis property test untuk offline scan
+    - **Property 20: Offline Scan Menampilkan Pesan Error**
+    - **Validates: Requirements 9.5**
+  - [x] 16.6 Buat `src/app/components/pwa/PWAInstallPrompt.tsx` — prompt install dengan teks "Instal PhishGuard sebagai aplikasi"
+    - _Requirements: 9.6_
+  - [x] 16.7 Update `LinkPredictor.tsx` untuk menambahkan pengecekan `navigator.onLine` sebelum fetch ke backend
+    - Tampilkan pesan offline jika tidak ada koneksi
+    - _Requirements: 9.5_
+
+- [x] 17. Micro-interactions Framer Motion
+  - [x] 17.1 Update `src/app/components/ToastNotification.tsx` — tambahkan `drag="x"` dengan threshold dismiss 100px
+    - _Requirements: 11.1_
+  - [ ]* 17.2 Tulis property test untuk drag-to-dismiss
+    - **Property 24: Drag-to-Dismiss Threshold**
+    - **Validates: Requirements 11.1, 11.2**
+  - [x] 17.3 Update `src/app/components/StatisticWidget.tsx` — tambahkan drag-to-dismiss ke kiri (threshold 80px) pada kartu riwayat
+    - _Requirements: 11.2_
+  - [x] 17.4 Update `src/app/components/AboutUs.tsx` — tambahkan stagger children animation (jeda 0.1 detik) pada grid `CollaboratorCard`
+    - _Requirements: 11.4_
+  - [x] 17.5 Update `src/app/components/Layout.tsx` — ganti transisi rute `y: 12` dengan efek glitch variants
+    - _Requirements: 11.3_
+  - [ ]* 17.6 Tulis property test untuk reduce motion
+    - **Property 25: Reduce Motion Menonaktifkan Animasi**
+    - **Validates: Requirements 11.8**
+
+- [x] 18. Integrasi Layout dan LinkPredictor
+  - [x] 18.1 Update `src/app/components/Layout.tsx` — wrap dengan `ThemeContext.Provider`, `GamificationContext.Provider`, `ScanContext.Provider`
+    - Tambahkan `ShaderBackground` (lazy), `ScanlineOverlay`, `HUDSystem`, `ConnectionStatus`, `TerminalModal`
+    - Ganti sidebar statis dengan `HUDSystem`
+    - _Requirements: 1.10, 2.1, 9.7_
+  - [x] 18.2 Update `src/app/components/LinkPredictor.tsx` — integrasi minimal dengan context
+    - Tambahkan `useScanContext()` dan panggil `setScanState` di `handleAnalyze`
+    - Tambahkan `useGamification()` dan panggil `recordScan` setelah hasil diterima
+    - Tambahkan `<ThreatMeter>`, `<VoiceButton>`, tombol "Lihat Cara Kerja Model" yang membuka `<NeuralNetModal>`
+    - Tambahkan `<ThreatGlobe>` di bawah grid utama (lazy loaded)
+    - _Requirements: 1.4, 1.5, 5.3, 6.1, 8.1, 10.1_
+  - [x] 18.3 Update `src/app/components/ThreeScene.tsx` — subscribe ke `ThemeContext` untuk update warna material
+    - _Requirements: 12.5_
+  - [ ]* 18.4 Tulis property test untuk Three.js material color update
+    - **Property 27: Three.js Material Color Update Saat Tema Berubah**
+    - **Validates: Requirements 12.5**
+  - [x] 18.5 Migrasi warna hardcoded di `Layout.tsx`, `LinkPredictor.tsx`, `StatisticWidget.tsx` ke CSS variables
+    - _Requirements: 12.7_
+
+- [x] 19. Checkpoint akhir — Pastikan semua test lulus
+  - Jalankan `npx vitest --run` dan pastikan semua test lulus. Tanyakan jika ada pertanyaan.
+
+## Catatan
+
+- Task bertanda `*` bersifat opsional dan dapat dilewati untuk MVP yang lebih cepat
+- Setiap task mereferensikan requirements spesifik untuk traceability
+- Fitur berat (`ThreatGlobe`, `NeuralNetModal`, `ShaderBackground`) menggunakan `React.lazy` + `Suspense`
+- Setiap fitur baru dibungkus `ErrorBoundary` agar crash tidak merusak aplikasi utama
+- Property tests menggunakan `fast-check` dengan minimum 100 iterasi
