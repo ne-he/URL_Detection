@@ -6,3 +6,7 @@ sentence-transformers>=3.0
 torch
 numpy
 requests
+# Wajib untuk hardware ZeroGPU: menyediakan decorator @spaces.GPU yang dideteksi
+# runtime saat startup. Tanpa paket ini import-nya gagal diam-diam (fallback no-op)
+# dan Space mati dengan "No @spaces.GPU function detected".
+spaces
