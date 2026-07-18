@@ -2,7 +2,6 @@
 fastapi>=0.111
 uvicorn[standard]>=0.30
 pydantic>=2.7
-tensorflow-cpu>=2.16,<2.20
 sentence-transformers>=3.0
 torch
 numpy
