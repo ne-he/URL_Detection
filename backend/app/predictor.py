@@ -48,9 +48,10 @@ class KerasURLPredictor:
     isinya sekarang numpy murni.
     """
 
-    def __init__(self, model_path: str, embedder_name: str) -> None:
+    def __init__(self, model_path: str, embedder_name: str, embedder_device: str = "cpu") -> None:
         self._model_path = model_path
         self._embedder_name = embedder_name
+        self._embedder_device = embedder_device
         self._weights: dict[str, np.ndarray] | None = None
         self._embedder = None
         self._error: str | None = None
@@ -83,7 +84,7 @@ class KerasURLPredictor:
             # Lazy import: torch/ST berat dan tidak dibutuhkan oleh test API.
             from sentence_transformers import SentenceTransformer  # noqa: PLC0415
 
-            self._embedder = SentenceTransformer(self._embedder_name)
+            self._embedder = SentenceTransformer(self._embedder_name, device=self._embedder_device)
 
             # Warmup: encode+predict sekali supaya request pertama tidak kena cold start.
             self.prob_legitimate(["http://example.com"])

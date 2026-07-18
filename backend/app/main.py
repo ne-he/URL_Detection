@@ -27,7 +27,9 @@ def create_app(settings: Settings | None = None, predictor: Predictor | None = N
     """App factory. `predictor` bisa di-inject (dipakai test dengan stub)."""
     settings = settings or get_settings()
     injected = predictor is not None
-    predictor = predictor or KerasURLPredictor(settings.model_path, settings.embedder_name)
+    predictor = predictor or KerasURLPredictor(
+        settings.model_path, settings.embedder_name, settings.embedder_device
+    )
 
     @asynccontextmanager
     async def lifespan(_: FastAPI):
@@ -43,7 +45,7 @@ def create_app(settings: Settings | None = None, predictor: Predictor | None = N
     app = FastAPI(
         title="PhishGuard v2",
         version="2.0.0",
-        description="Deteksi URL phishing — MiniLM embedding + Keras classifier.",
+        description="Deteksi URL phishing: MiniLM embedding + dense classifier (numpy).",
         lifespan=lifespan,
     )
 

@@ -28,6 +28,10 @@ class Settings:
     model_path: str = os.getenv("MODEL_PATH", "models/phishing_detection_weights.npz")
     # Nama model sentence-transformers untuk embedding URL.
     embedder_name: str = os.getenv("EMBEDDER_NAME", "all-MiniLM-L6-v2")
+    # Device embedding. Default "cpu": di ZeroGPU, GPU cuma boleh diakses di dalam
+    # fungsi @spaces.GPU, jadi inference di route biasa WAJIB CPU biar tidak error
+    # saat request (walau warmup startup kebetulan dapat cuda).
+    embedder_device: str = os.getenv("EMBEDDER_DEVICE", "cpu")
     # Batas panjang URL yang diterima (RFC praktis; browser umumnya ~2000).
     max_url_length: int = int(os.getenv("MAX_URL_LENGTH", "2048"))
 
