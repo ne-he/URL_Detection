@@ -1,4 +1,4 @@
-"""PhishGuard v2 — API deteksi URL phishing.
+"""PhishGuard v2: API deteksi URL phishing.
 
 Perbaikan utama dibanding v1:
 - CORS: origin spesifik dari env, bukan "*" + credentials.
@@ -6,6 +6,10 @@ Perbaikan utama dibanding v1:
 - Validasi & normalisasi URL (Pydantic) => input aneh ditolak 422, bukan diprediksi.
 - Threshold & konfigurasi dari environment, bukan hardcode.
 - Warmup saat startup => request pertama tidak lambat.
+
+`register_api()` dipisah dari `create_app()` supaya entrypoint Space (yang pakai
+`gradio.Server`, juga subclass FastAPI) bisa menempelkan endpoint yang sama persis
+tanpa menduplikasi logika prediksi.
 """
 from __future__ import annotations
 
@@ -23,57 +27,44 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name
 logger = logging.getLogger("phishguard")
 
 
-def create_app(settings: Settings | None = None, predictor: Predictor | None = None) -> FastAPI:
-    """App factory. `predictor` bisa di-inject (dipakai test dengan stub)."""
-    settings = settings or get_settings()
-    injected = predictor is not None
-    predictor = predictor or KerasURLPredictor(
-        settings.model_path, settings.embedder_name, settings.embedder_device
+def classify(url: str, p_legit: float, threshold: float) -> PredictionResponse:
+    """Ubah P(legitimate) jadi keputusan label. Satu-satunya tempat aturan ini hidup."""
+    p_phish = 1.0 - p_legit
+    is_phishing = p_phish > threshold
+    return PredictionResponse(
+        url=url,
+        label="PHISHING" if is_phishing else "LEGITIMATE",
+        confidence=round((p_phish if is_phishing else p_legit) * 100, 2),
+        legitimate_chance=round(p_legit * 100, 2),
+        is_dangerous=is_phishing,
+        threshold=threshold,
+        model_version=MODEL_VERSION,
     )
 
-    @asynccontextmanager
-    async def lifespan(_: FastAPI):
-        if not injected:
-            try:
-                predictor.load()  # type: ignore[attr-defined]
-            except Exception:
-                # JANGAN crash proses — biarkan /health melaporkan 503 dengan alasan jelas,
-                # supaya operator melihat servisnya sakit, bukan restart-loop tanpa log.
-                logger.error("Startup selesai TANPA model — /predict akan menolak request.")
-        yield
 
-    app = FastAPI(
-        title="PhishGuard v2",
-        version="2.0.0",
-        description="Deteksi URL phishing: MiniLM embedding + dense classifier (numpy).",
-        lifespan=lifespan,
-    )
+def register_api(
+    app: FastAPI, settings: Settings, predictor: Predictor, add_cors: bool = True
+) -> None:
+    """Pasang endpoint (/, /health, /predict, /predict/batch) ke `app`.
 
-    # allow_credentials=False karena API ini tidak pakai cookie/session.
-    # Kalau nanti butuh credentials, WAJIB origin eksplisit (spec browser menolak "*").
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=settings.frontend_origins,
-        allow_credentials=False,
-        allow_methods=["GET", "POST"],
-        allow_headers=["*"],
-    )
+    `app` boleh FastAPI biasa atau subclass-nya (mis. gradio.Server di Space).
+    `add_cors=False` dipakai saat host sudah punya CORS sendiri (gradio.Server
+    memantulkan Origin lewat CORS bawaannya); pasang dua-duanya bikin header
+    Access-Control-Allow-Origin dobel dan browser menolaknya.
+    """
+    if add_cors:
+        # allow_credentials=False karena API ini tidak pakai cookie/session.
+        # Kalau nanti butuh credentials, WAJIB origin eksplisit (spec browser menolak "*").
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=settings.frontend_origins,
+            allow_credentials=False,
+            allow_methods=["GET", "POST"],
+            allow_headers=["*"],
+        )
 
     def get_predictor() -> Predictor:
         return predictor
-
-    def _classify(url: str, p_legit: float) -> PredictionResponse:
-        p_phish = 1.0 - p_legit
-        is_phishing = p_phish > settings.phishing_threshold
-        return PredictionResponse(
-            url=url,
-            label="PHISHING" if is_phishing else "LEGITIMATE",
-            confidence=round((p_phish if is_phishing else p_legit) * 100, 2),
-            legitimate_chance=round(p_legit * 100, 2),
-            is_dangerous=is_phishing,
-            threshold=settings.phishing_threshold,
-            model_version=MODEL_VERSION,
-        )
 
     @app.get("/", include_in_schema=False)
     def home():
@@ -96,7 +87,7 @@ def create_app(settings: Settings | None = None, predictor: Predictor | None = N
         if not pred.ready:
             raise HTTPException(status_code=503, detail=pred.error or "Model belum siap")
         p_legit = pred.prob_legitimate([request.url])[0]
-        return _classify(request.url, p_legit)
+        return classify(request.url, p_legit, settings.phishing_threshold)
 
     @app.post("/predict/batch", response_model=list[PredictionResponse])
     def predict_batch(request: BatchRequest, pred: Predictor = Depends(get_predictor)):
@@ -105,8 +96,35 @@ def create_app(settings: Settings | None = None, predictor: Predictor | None = N
         # Validasi per-URL lewat schema yang sama dengan endpoint tunggal.
         validated = [URLRequest(url=u).url for u in request.urls]
         probs = pred.prob_legitimate(validated)
-        return [_classify(u, p) for u, p in zip(validated, probs)]
+        return [classify(u, p, settings.phishing_threshold) for u, p in zip(validated, probs)]
 
+
+def create_app(settings: Settings | None = None, predictor: Predictor | None = None) -> FastAPI:
+    """App factory. `predictor` bisa di-inject (dipakai test dengan stub)."""
+    settings = settings or get_settings()
+    injected = predictor is not None
+    predictor = predictor or KerasURLPredictor(
+        settings.model_path, settings.embedder_name, settings.embedder_device
+    )
+
+    @asynccontextmanager
+    async def lifespan(_: FastAPI):
+        if not injected:
+            try:
+                predictor.load()  # type: ignore[attr-defined]
+            except Exception:
+                # JANGAN crash proses: biarkan /health melaporkan 503 dengan alasan jelas,
+                # supaya operator melihat servisnya sakit, bukan restart-loop tanpa log.
+                logger.error("Startup selesai TANPA model, /predict akan menolak request.")
+        yield
+
+    app = FastAPI(
+        title="PhishGuard v2",
+        version="2.0.0",
+        description="Deteksi URL phishing: MiniLM embedding + dense classifier (numpy).",
+        lifespan=lifespan,
+    )
+    register_api(app, settings, predictor)
     return app
 
 
