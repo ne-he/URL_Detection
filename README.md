@@ -1,6 +1,6 @@
 # PhishGuard v2
 
-URL phishing detection API. A full rebuild of [URL_Detection](https://github.com/ne-he/URL_Detection) with the backend engineered properly this time: honest health checks, strict input validation, configurable thresholds, and a regression test that locks the label orientation so a retrained model can never silently flip "phishing" and "legitimate".
+URL phishing detection, full stack. The React frontend (cyber dark UI, PWA, threat globe, gamification) lives at the repo root; the backend is a ground-up rebuild with honest health checks, strict input validation, configurable thresholds, and a regression test that locks the label orientation so a retrained model can never silently flip "phishing" and "legitimate".
 
 **How it works:** the URL string is embedded with `all-MiniLM-L6-v2` (sentence-transformers), then a small Keras dense network outputs P(legitimate). Trained on ~81k labeled URLs.
 
@@ -21,8 +21,15 @@ v1 worked, but had the classic demo-project problems:
 
 ```bash
 docker compose up --build
-# API:  http://localhost:7860/docs
-# open demo/index.html in a browser and point it at http://localhost:7860
+# API:       http://localhost:7860/docs
+# Frontend:  http://localhost:5173
+```
+
+Frontend only (talks to the deployed backend by default):
+
+```bash
+npm install
+npm run dev          # set VITE_API_BASE in .env.local to point elsewhere
 ```
 
 Native (needs Python 3.12, ~1.5 GB of deps for TF + torch):
@@ -78,9 +85,17 @@ The label-orientation test needs the real model and skips itself when TF isn't i
 | `MODEL_PATH` | `models/phishing_detection_deeplearning.h5` | Keras artifact |
 | `EMBEDDER_NAME` | `all-MiniLM-L6-v2` | sentence-transformers model |
 
+Frontend env (Vite, set in `.env.local` or Vercel):
+
+| Env | Default | What it does |
+|---|---|---|
+| `VITE_API_BASE` | old HF Space URL | Backend base URL the UI calls |
+| `VITE_FEATURE_*` | on | Feature flags (shader, globe, voice, gamification) |
+
 ## Repo layout
 
 ```
+src/, index.html, package.json   React frontend (Vite), deployed on Vercel
 backend/
   app/          config, schemas (validation), predictor (the only file that knows TF), main (routes)
   models/       trained .h5 artifact (712 KB)
