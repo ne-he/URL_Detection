@@ -7,3 +7,5 @@ sentence-transformers>=3.0
 torch
 numpy
 requests
+# Gradio 4.44.1 (sdk_version Space) masih impor HfFolder yang dihapus di hub 1.0.
+huggingface_hub<1.0
