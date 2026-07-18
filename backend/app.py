@@ -1,107 +1,71 @@
 """Entrypoint Hugging Face Gradio Space (hardware ZeroGPU).
 
 Akun free HF sekarang cuma boleh ZeroGPU untuk Gradio Space (Docker & CPU basic
-di-lock PRO), jadi backend FastAPI v2 dibungkus di sini. Yang dijalankan tetap
-API yang sama persis:
+di-lock PRO). ZeroGPU hanya "menyala" kalau app dijalankan lewat mekanisme Gradio
+(`app.launch()`), BUKAN uvicorn manual, dan menolak start tanpa fungsi @spaces.GPU.
 
-    GET  /            UI Gradio interaktif (landing Space)
+Solusinya `gradio.Server`: subclass FastAPI resmi dari Gradio yang boleh menambah
+route sendiri (jadi kontrak /predict v1 tetap ada untuk frontend) tapi tetap
+dilaunch lewat Gradio (jadi ZeroGPU happy). Endpoint API-nya identik dengan versi
+lokal karena dipasang oleh register_api() yang sama.
+
+    GET  /            status JSON
     POST /predict     kontrak v1-compatible; frontend Vercel manggil ini
     POST /predict/batch
     GET  /health      503 kalau model belum siap
     GET  /docs        Swagger
 
-Catatan ZeroGPU (mahal dipelajari, jangan diubah tanpa alasan):
-- Runtime NOLAK start kalau tidak ada fungsi ber-@spaces.GPU, dan deteksinya
-  STATIS di top-level app_file. Fungsi nested di dalam `if` TIDAK terdeteksi
-  (itu bikin error "No @spaces.GPU function detected"). Makanya _zerogpu_probe
-  ditaruh di top-level. Backend ini CPU-only, fungsi itu murni formalitas.
-- Embedding dipaksa CPU (lihat config.EMBEDDER_DEVICE): GPU cuma boleh diakses
-  DI DALAM fungsi @spaces.GPU, jadi inference di route biasa harus CPU.
-- Gradio 5 di Spaces menyalakan SSR (butuh Node.js) yang memperumit lifecycle;
-  kita matikan via GRADIO_SSR_MODE sebelum impor gradio.
+Catatan ZeroGPU (mahal dipelajari):
+- Embedding dipaksa CPU (config.EMBEDDER_DEVICE): GPU cuma boleh diakses DI DALAM
+  fungsi @spaces.GPU, jadi inference di route biasa harus CPU.
+- `spaces` wajib ada di requirements.txt; tanpa itu decorator @spaces.GPU tidak
+  ter-register dan Space mati "No @spaces.GPU function detected".
 """
 from __future__ import annotations
 
 import os
 
-# Matikan SSR SEBELUM impor gradio (kita cuma butuh demo sederhana + REST API).
-os.environ.setdefault("GRADIO_SSR_MODE", "False")
+# gradio.Server tidak butuh SSR (tidak ada UI Blocks); matikan sebelum impor gradio
+# supaya tidak ada server Node.js yang memperumit lifecycle di ZeroGPU.
+os.environ["GRADIO_SSR_MODE"] = "False"
 
-# `spaces` selalu ada di hardware ZeroGPU. Fallback no-op hanya supaya modul ini
-# tetap bisa diimpor di mesin lokal tanpa paket itu (app.py cuma dipakai di Space;
-# dev lokal jalan lewat `uvicorn app.main:app`).
+import spaces
+from gradio import Server
+
+from app.config import get_settings
+from app.main import classify, register_api
+from app.predictor import KerasURLPredictor
+from app.schemas import URLRequest
+
+settings = get_settings()
+predictor = KerasURLPredictor(
+    settings.model_path, settings.embedder_name, settings.embedder_device
+)
+# gradio.Server tidak memakai lifespan FastAPI kita, jadi model di-load eager di sini.
+# Kalau gagal, biarkan lanjut: /health akan melaporkan 503 dengan alasan jelas.
 try:
-    import spaces
-except ImportError:  # pragma: no cover - hanya di luar Space
+    predictor.load()
+except Exception:  # noqa: BLE001 - alasan sudah tersimpan di predictor.error
+    pass
 
-    class _NoSpaces:
-        @staticmethod
-        def GPU(fn=None, **_):
-            return fn if callable(fn) else (lambda f: f)
-
-    spaces = _NoSpaces()
-
-import gradio as gr
-import requests
-
-from app.main import app as fastapi_app
+app = Server()
+# add_cors=False: gradio.Server sudah memantulkan Origin lewat CORS bawaannya
+# (di host non-localhost seperti *.hf.space). Menambah CORS kedua bikin header dobel.
+register_api(app, settings, predictor, add_cors=False)
 
 
+@app.api(name="check")
 @spaces.GPU
-def _zerogpu_probe():
-    """Formalitas ZeroGPU: harus ada minimal satu @spaces.GPU di top-level.
+def check(url: str) -> dict:
+    """Endpoint API Gradio ber-@spaces.GPU: WAJIB ada supaya ZeroGPU mau start.
 
-    Tidak pernah dipanggil; prediksi asli jalan CPU lewat /predict.
+    Backend ini CPU-only, jadi fungsi ini bukan jalur utama (frontend pakai
+    POST /predict biasa). Ada supaya runtime mendeteksi minimal satu fungsi GPU.
     """
-    return None
+    req = URLRequest(url=url)
+    p_legit = predictor.prob_legitimate([req.url])[0]
+    return classify(req.url, p_legit, settings.phishing_threshold).model_dump()
 
-
-# UI memanggil endpoint /predict di proses yang sama (loopback) supaya validasi
-# & konvensi label persis sama dengan yang dipakai frontend.
-_LOCAL_API = "http://127.0.0.1:7860"
-
-
-def _inspect(url: str) -> dict:
-    url = (url or "").strip()
-    if not url:
-        return {"error": "Masukkan URL dulu."}
-    try:
-        resp = requests.post(f"{_LOCAL_API}/predict", json={"url": url}, timeout=60)
-    except requests.RequestException as exc:
-        return {"error": f"Request gagal: {exc}"}
-    if resp.status_code != 200:
-        try:
-            detail = resp.json().get("detail", resp.text)
-        except ValueError:
-            detail = resp.text
-        return {"error": detail, "status_code": resp.status_code}
-    return resp.json()
-
-
-with gr.Blocks(title="PhishGuard v2", theme=gr.themes.Soft()) as demo:
-    gr.Markdown(
-        "# 🛡️ PhishGuard v2\n"
-        "Deteksi URL phishing: embedding **MiniLM** + dense classifier. "
-        "REST API lengkap ada di [`/docs`](/docs)."
-    )
-    url_in = gr.Textbox(label="URL", placeholder="https://contoh.com", lines=1)
-    check = gr.Button("Periksa", variant="primary")
-    result = gr.JSON(label="Hasil")
-    check.click(_inspect, inputs=url_in, outputs=result)
-    url_in.submit(_inspect, inputs=url_in, outputs=result)
-    gr.Examples(
-        examples=["https://www.google.com", "http://192.168.0.1/login-verify.exe"],
-        inputs=url_in,
-    )
-
-# Gradio mengambil alih landing "/"; hapus route home JSON bawaan agar tidak bentrok.
-fastapi_app.router.routes = [
-    r for r in fastapi_app.router.routes if getattr(r, "path", None) != "/"
-]
-
-app = gr.mount_gradio_app(fastapi_app, demo, path="/")
 
 if __name__ == "__main__":
-    import uvicorn
-
-    uvicorn.run(app, host="0.0.0.0", port=7860)
+    app.launch(server_name="0.0.0.0", server_port=7860)
