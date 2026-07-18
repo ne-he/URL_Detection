@@ -4,8 +4,17 @@ __pycache__/
 *.egg-info/
 .venv/
 venv/
+env/
+anaconda3/
 .pytest_cache/
 .ruff_cache/
+.ipynb_checkpoints/
+
+# Node / frontend
+node_modules/
+dist/
+dev-dist/
+.env.local
 
 # Env & secrets
 .env
@@ -21,6 +30,9 @@ Thumbs.db
 # Logs & artefak lokal
 *.log
 *.db
+*.xlsx
+*.zip
+*.tar.gz
 
-# Dataset penuh tidak ikut repo (lihat backend/data/README di README utama)
+# Dataset penuh tidak ikut repo (ada sample 100 baris di backend/data/)
 backend/data/data.csv
