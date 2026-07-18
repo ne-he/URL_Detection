@@ -1,8 +1,8 @@
 """Entrypoint Hugging Face Gradio Space.
 
-Docker Space di-lock (Paid) untuk akun free, jadi backend ini dibungkus sebagai
-Gradio Space (gratis, CPU basic, RAM 16 GB). Yang dijalankan tetap FastAPI v2
-yang sama persis:
+Docker Space dan CPU basic di-lock (Paid/PRO) untuk akun free ini, jadi backend
+dibungkus sebagai Gradio Space di hardware ZeroGPU (tier gratis satu-satunya).
+Yang dijalankan tetap FastAPI v2 yang sama persis:
 
     GET  /            UI Gradio interaktif (landing Space)
     POST /predict     kontrak v1-compatible — frontend Vercel manggil ini
@@ -15,8 +15,23 @@ endpoint /predict yang sama, jadi tidak ada dua sumber kebenaran.
 """
 from __future__ import annotations
 
+# ZeroGPU: `spaces` harus diimpor paling awal (sebelum gradio/torch) dan runtime
+# menolak start tanpa minimal satu fungsi ber-decorator @spaces.GPU. Backend ini
+# tidak butuh GPU, jadi cukup fungsi kosong sebagai formalitas.
+try:
+    import spaces  # noqa: F401
+except ImportError:  # dev lokal / hardware non-ZeroGPU
+    spaces = None
+
 import gradio as gr
 import requests
+
+if spaces is not None:
+
+    @spaces.GPU
+    def _zerogpu_probe() -> None:
+        """Tidak pernah dipanggil; ada hanya supaya ZeroGPU mau start."""
+        return None
 
 # app.main sudah membuat FastAPI + lifespan yang load model saat startup.
 from app.main import app as fastapi_app

@@ -12,11 +12,13 @@ pinned: false
 # PhishGuard API (v2)
 
 FastAPI backend for URL phishing detection. A URL string is embedded with
-`all-MiniLM-L6-v2` (sentence-transformers), then a small Keras dense network
-outputs P(legitimate).
+`all-MiniLM-L6-v2` (sentence-transformers), then a small dense network
+(weights converted from the original Keras model to numpy, no TensorFlow at
+runtime) outputs P(legitimate).
 
-Runs as a Gradio Space (free CPU tier). `app.py` serves the full FastAPI app
-on port 7860 with an interactive Gradio demo mounted at the landing page.
+Runs as a Gradio Space on ZeroGPU hardware (the GPU itself is unused; a dummy
+`@spaces.GPU` function satisfies the runtime). `app.py` serves the full FastAPI
+app on port 7860 with an interactive Gradio demo mounted at the landing page.
 
 ## Endpoints
 

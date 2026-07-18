@@ -22,7 +22,7 @@ jobs:
         env:
           PYTHONPATH: backend
 
-  # Berat (butuh TF + download MiniLM): mengunci orientasi label model asli.
+  # Berat (butuh torch + download MiniLM): mengunci orientasi label model asli.
   # Jalan di push ke main & manual dispatch — tidak memperlambat PR kecil.
   model-regression:
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'

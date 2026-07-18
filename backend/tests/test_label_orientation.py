@@ -1,9 +1,9 @@
 """Regression test orientasi label — MENGUNCI konvensi 0.0=phishing, 1.0=legitimate.
 
 Kalau model di-retrain dengan LabelEncoder yang arahnya kebalik, test ini yang
-menangkapnya SEBELUM model salah kaprah masuk produksi. Butuh TensorFlow +
-sentence-transformers + file model — otomatis di-skip kalau tidak tersedia
-(mis. di mesin dev tanpa TF), dan jalan penuh di Docker/CI job model-regression.
+menangkapnya SEBELUM model salah kaprah masuk produksi. Butuh
+sentence-transformers + file bobot .npz, otomatis di-skip kalau tidak tersedia
+(mis. di mesin dev tanpa torch), dan jalan penuh di CI job model-regression.
 """
 from __future__ import annotations
 
@@ -11,9 +11,8 @@ import os
 
 import pytest
 
-MODEL_PATH = os.path.join(os.path.dirname(__file__), "..", "models", "phishing_detection_deeplearning.h5")
+MODEL_PATH = os.path.join(os.path.dirname(__file__), "..", "models", "phishing_detection_weights.npz")
 
-tf = pytest.importorskip("tensorflow", reason="TensorFlow tidak terpasang — jalankan di Docker/CI")
 pytest.importorskip("sentence_transformers", reason="sentence-transformers tidak terpasang")
 
 pytestmark = pytest.mark.skipif(
