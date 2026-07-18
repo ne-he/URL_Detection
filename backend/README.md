@@ -3,8 +3,9 @@ title: PhishGuard API
 emoji: 🛡️
 colorFrom: green
 colorTo: gray
-sdk: docker
-app_port: 7860
+sdk: gradio
+sdk_version: 4.44.1
+app_file: app.py
 pinned: false
 ---
 
@@ -14,7 +15,8 @@ FastAPI backend for URL phishing detection. A URL string is embedded with
 `all-MiniLM-L6-v2` (sentence-transformers), then a small Keras dense network
 outputs P(legitimate).
 
-Runs as a Docker Space on port 7860.
+Runs as a Gradio Space (free CPU tier). `app.py` serves the full FastAPI app
+on port 7860 with an interactive Gradio demo mounted at the landing page.
 
 ## Endpoints
 
