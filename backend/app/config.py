@@ -24,8 +24,8 @@ class Settings:
     )
     # Ambang klasifikasi phishing (probabilitas phishing > threshold => PHISHING).
     phishing_threshold: float = float(os.getenv("PHISHING_THRESHOLD", "0.5"))
-    # Path artefak model Keras.
-    model_path: str = os.getenv("MODEL_PATH", "models/phishing_detection_deeplearning.h5")
+    # Path bobot model (.npz hasil konversi artefak Keras, lihat scripts/convert_h5_to_npz.py).
+    model_path: str = os.getenv("MODEL_PATH", "models/phishing_detection_weights.npz")
     # Nama model sentence-transformers untuk embedding URL.
     embedder_name: str = os.getenv("EMBEDDER_NAME", "all-MiniLM-L6-v2")
     # Batas panjang URL yang diterima (RFC praktis; browser umumnya ~2000).
