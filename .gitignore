@@ -34,5 +34,8 @@ Thumbs.db
 *.zip
 *.tar.gz
 
-# Dataset penuh tidak ikut repo (ada sample 100 baris di backend/data/)
+# Dataset penuh & artefak build tidak ikut repo (regenerate via scripts/build_dataset.py
+# + train_model.py; ada sample 100 baris di backend/data/)
 backend/data/data.csv
+backend/data/data_v2.csv
+backend/data/_emb_cache.npy

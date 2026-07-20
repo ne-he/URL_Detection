@@ -53,6 +53,11 @@ class PredictionResponse(BaseModel):
     is_dangerous: bool
     threshold: float
     model_version: str
+    # Field tambahan v2.2 (opsional supaya frontend lama tetap kompatibel):
+    # "model" = keputusan dari ML, "blocklist" = kena feed phishing publik.
+    source: str = "model"
+    # Umur domain (hari) via RDAP kalau ENABLE_DOMAIN_AGE aktif; None kalau tidak dicek.
+    domain_age_days: int | None = None
 
 
 class BatchRequest(BaseModel):

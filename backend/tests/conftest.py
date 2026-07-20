@@ -33,14 +33,20 @@ class StubPredictor:
         return out
 
 
+def _test_settings() -> Settings:
+    # Blocklist & RDAP OFF di test: unit test tidak boleh nyentuh jaringan
+    # (flaky di CI, dan hasil test jadi tergantung isi feed hari itu).
+    return Settings(enable_blocklist=False, enable_domain_age=False)
+
+
 @pytest.fixture
 def client() -> TestClient:
-    app = create_app(settings=Settings(), predictor=StubPredictor())
+    app = create_app(settings=_test_settings(), predictor=StubPredictor())
     return TestClient(app)
 
 
 @pytest.fixture
 def sick_client() -> TestClient:
     """App yang model-nya gagal load — untuk menguji /health jujur."""
-    app = create_app(settings=Settings(), predictor=StubPredictor(ready=False))
+    app = create_app(settings=_test_settings(), predictor=StubPredictor(ready=False))
     return TestClient(app)

@@ -22,12 +22,19 @@ from fastapi.middleware.cors import CORSMiddleware
 from .config import Settings, get_settings
 from .predictor import MODEL_VERSION, KerasURLPredictor, Predictor
 from .schemas import BatchRequest, HealthResponse, PredictionResponse, URLRequest
+from .threat import Blocklist, DomainAge, in_allowlist
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 logger = logging.getLogger("phishguard")
 
 
-def classify(url: str, p_legit: float, threshold: float) -> PredictionResponse:
+def classify(
+    url: str,
+    p_legit: float,
+    threshold: float,
+    source: str = "model",
+    domain_age_days: int | None = None,
+) -> PredictionResponse:
     """Ubah P(legitimate) jadi keputusan label. Satu-satunya tempat aturan ini hidup."""
     p_phish = 1.0 - p_legit
     is_phishing = p_phish > threshold
@@ -39,6 +46,36 @@ def classify(url: str, p_legit: float, threshold: float) -> PredictionResponse:
         is_dangerous=is_phishing,
         threshold=threshold,
         model_version=MODEL_VERSION,
+        source=source,
+        domain_age_days=domain_age_days,
+    )
+
+
+def classify_blocklisted(url: str, threshold: float) -> PredictionResponse:
+    """URL yang persis ada di feed phishing publik: vonis PHISHING 100% tanpa nebak."""
+    return PredictionResponse(
+        url=url,
+        label="PHISHING",
+        confidence=100.0,
+        legitimate_chance=0.0,
+        is_dangerous=True,
+        threshold=threshold,
+        model_version=MODEL_VERSION,
+        source="blocklist",
+    )
+
+
+def classify_allowlisted(url: str, threshold: float) -> PredictionResponse:
+    """Host tepercaya terkurasi: vonis LEGITIMATE tanpa nebak (cegah false positive)."""
+    return PredictionResponse(
+        url=url,
+        label="LEGITIMATE",
+        confidence=100.0,
+        legitimate_chance=100.0,
+        is_dangerous=False,
+        threshold=threshold,
+        model_version=MODEL_VERSION,
+        source="allowlist",
     )
 
 
@@ -63,6 +100,16 @@ def register_api(
             allow_headers=["*"],
         )
 
+    # Level 3 & 4: sinyal non-ML. Blocklist di-load di thread terpisah supaya
+    # startup (dan endpoint pertama) tidak nunggu jaringan; kalau gagal, backend
+    # tetap jalan pakai ML saja.
+    blocklist = Blocklist(enabled=settings.enable_blocklist)
+    domain_age = DomainAge(enabled=settings.enable_domain_age)
+    if settings.enable_blocklist:
+        import threading
+
+        threading.Thread(target=blocklist.load, daemon=True).start()
+
     def get_predictor() -> Predictor:
         return predictor
 
@@ -72,6 +119,7 @@ def register_api(
         return {
             "service": "PhishGuard v2",
             "status": "ready" if predictor.ready else "degraded",
+            "blocklist_size": blocklist.size,
             "docs": "/docs",
             "health": "/health",
         }
@@ -86,17 +134,40 @@ def register_api(
     def predict(request: URLRequest, pred: Predictor = Depends(get_predictor)):
         if not pred.ready:
             raise HTTPException(status_code=503, detail=pred.error or "Model belum siap")
+        blocklist.maybe_refresh()
+        # Urutan keputusan: (1) blocklist phishing menang duluan (bisa jadi ada 1
+        # halaman phishing di domain yang di-compromise), (2) allowlist tepercaya,
+        # (3) ML buat sisanya.
+        if blocklist.check(request.url):
+            return classify_blocklisted(request.url, settings.phishing_threshold)
+        if in_allowlist(request.url):
+            return classify_allowlisted(request.url, settings.phishing_threshold)
         p_legit = pred.prob_legitimate([request.url])[0]
-        return classify(request.url, p_legit, settings.phishing_threshold)
+        # Level 4: perkaya dengan umur domain (best-effort; None kalau nonaktif/gagal).
+        age = domain_age.days(request.url)
+        return classify(request.url, p_legit, settings.phishing_threshold, domain_age_days=age)
 
     @app.post("/predict/batch", response_model=list[PredictionResponse])
     def predict_batch(request: BatchRequest, pred: Predictor = Depends(get_predictor)):
         if not pred.ready:
             raise HTTPException(status_code=503, detail=pred.error or "Model belum siap")
+        blocklist.maybe_refresh()
         # Validasi per-URL lewat schema yang sama dengan endpoint tunggal.
         validated = [URLRequest(url=u).url for u in request.urls]
-        probs = pred.prob_legitimate(validated)
-        return [classify(u, p, settings.phishing_threshold) for u, p in zip(validated, probs)]
+        # Hanya URL yang lolos blocklist & allowlist yang perlu di-ML (hemat komputasi).
+        blocked = {u: bool(blocklist.check(u)) for u in validated}
+        allowed = {u: (not blocked[u] and in_allowlist(u)) for u in validated}
+        to_score = [u for u in validated if not blocked[u] and not allowed[u]]
+        scores = dict(zip(to_score, pred.prob_legitimate(to_score))) if to_score else {}
+        out: list[PredictionResponse] = []
+        for u in validated:
+            if blocked[u]:
+                out.append(classify_blocklisted(u, settings.phishing_threshold))
+            elif allowed[u]:
+                out.append(classify_allowlisted(u, settings.phishing_threshold))
+            else:
+                out.append(classify(u, scores[u], settings.phishing_threshold))
+        return out
 
 
 def create_app(settings: Settings | None = None, predictor: Predictor | None = None) -> FastAPI:
