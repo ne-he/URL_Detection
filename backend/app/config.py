@@ -34,6 +34,12 @@ class Settings:
     embedder_device: str = os.getenv("EMBEDDER_DEVICE", "cpu")
     # Batas panjang URL yang diterima (RFC praktis; browser umumnya ~2000).
     max_url_length: int = int(os.getenv("MAX_URL_LENGTH", "2048"))
+    # Level 3: cek URL ke blocklist feed publik sebelum ML. Matikan (0) kalau Space
+    # tidak punya outbound network.
+    enable_blocklist: bool = os.getenv("ENABLE_BLOCKLIST", "1") not in ("0", "false", "False")
+    # Level 4: perkaya response dengan umur domain via RDAP (best-effort, timeout ketat).
+    # Default OFF karena nambah latensi per-request; nyalakan lewat env kalau mau.
+    enable_domain_age: bool = os.getenv("ENABLE_DOMAIN_AGE", "0") not in ("0", "false", "False")
 
 
 def get_settings() -> Settings:
