@@ -21,12 +21,16 @@ from typing import Protocol
 
 import numpy as np
 
+from .features import extract_batch
+
 logger = logging.getLogger("phishguard")
 
-MODEL_VERSION = "v2.1-minilm-npz"
+MODEL_VERSION = "v2.2-minilm-lexical"
 
 # Kunci bobot di file .npz, urut sesuai layer. Divalidasi saat load.
-_WEIGHT_KEYS = ("w0", "b0", "w1", "b1", "w2", "b2")
+# v2.2: input = concat[MiniLM(384), fitur_lexical(20)] lalu di-StandardScale
+# pakai mean/scale yang disimpan bareng bobot.
+_WEIGHT_KEYS = ("w0", "b0", "w1", "b1", "w2", "b2", "mean", "scale")
 
 
 class Predictor(Protocol):
@@ -100,7 +104,12 @@ class KerasURLPredictor:
         if not self.ready:
             raise RuntimeError("Predictor belum siap: load() belum sukses")
         w = self._weights
-        x = np.asarray(self._embedder.encode(urls), dtype=np.float32)
+        emb = np.asarray(self._embedder.encode(urls), dtype=np.float32)
+        feats = extract_batch(urls)
+        # Urutan concat HARUS sama dengan training: [embedding, fitur_lexical].
+        x = np.hstack([emb, feats]).astype(np.float32)
+        # StandardScaler yang di-fit saat training: (x - mean) / scale.
+        x = (x - w["mean"]) / w["scale"]
         h = np.maximum(x @ w["w0"] + w["b0"], 0.0)
         h = np.maximum(h @ w["w1"] + w["b1"], 0.0)
         logits = h @ w["w2"] + w["b2"]
