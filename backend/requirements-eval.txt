@@ -1,0 +1,15 @@
+# Dependensi untuk evaluasi offline (scripts/eval_report.py, evaluate.py,
+# train_model.py, verify_encoder.py). SENGAJA DIPISAH dari requirements-dev.txt
+# supaya job CI api-tests tetap ringan: matplotlib & scikit-learn tidak dibutuhkan
+# untuk menjalankan test API.
+#
+# Tidak mencantumkan torch: kalau sentence-transformers bisa di-import, script eval
+# memakainya; kalau tidak, fallback ke encoder numpy di scripts/minilm_numpy.py
+# yang cuma butuh safetensors + tokenizers.
+numpy
+pandas
+scikit-learn
+matplotlib
+safetensors
+tokenizers
+idna

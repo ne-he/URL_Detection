@@ -34,6 +34,17 @@ jobs:
           python-version: "3.12"
           cache: pip
       - run: pip install -r backend/requirements.txt -r backend/requirements-dev.txt
-      - run: pytest backend/tests/test_label_orientation.py -x -q
+      # Test ini di-skip di level modul kalau sentence-transformers gagal di-import atau
+      # artefak bobot tidak ada. Skip bikin pytest keluar dengan kode 0, jadi job ini bisa
+      # hijau tanpa satu pun assertion orientasi label pernah dijalankan, dan penjaganya
+      # mati diam-diam. Karena itu jumlah test yang LULUS diperiksa eksplisit di bawah.
+      - name: Regression orientasi label (wajib benar-benar jalan, bukan di-skip)
+        run: |
+          set -o pipefail
+          pytest backend/tests/test_label_orientation.py -x -q -rs | tee pytest-out.txt
+          if ! grep -qE '[0-9]+ passed' pytest-out.txt; then
+            echo "::error::test_label_orientation tidak menjalankan satu pun assertion (di-skip seluruhnya). Penjaga orientasi label TIDAK aktif, jadi job ini digagalkan."
+            exit 1
+          fi
         env:
           PYTHONPATH: backend
