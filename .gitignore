@@ -39,6 +39,11 @@ Thumbs.db
 backend/data/data.csv
 backend/data/data_v2.csv
 backend/data/_emb_cache.npy
+backend/data/_eval_emb_cache.npz
+
+# Output tooling graphify (cache AST + semantic ter-hash, graph.html, cost.json).
+# Bisa di-generate ulang kapan saja, bukan isi repo.
+graphify-out/
 
 # konfigurasi tool lokal & spec draft, bukan bagian dari produk
 .claude/

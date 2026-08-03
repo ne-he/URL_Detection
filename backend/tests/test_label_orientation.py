@@ -13,10 +13,31 @@ import pytest
 
 MODEL_PATH = os.path.join(os.path.dirname(__file__), "..", "models", "phishing_detection_weights.npz")
 
-pytest.importorskip("sentence_transformers", reason="sentence-transformers tidak terpasang")
+# Jangan pakai pytest.importorskip di sini. importorskip cuma menangkap ImportError,
+# sementara di Windows torch gagal dengan OSError WinError 1114 (runtime OpenMP-nya
+# bentrok). OSError lolos dari importorskip dan bikin SELURUH sesi pytest berhenti di
+# tahap collection, jadi nol test jalan. Skip harus eksplisit.
+#
+# Import sklearn duluan itu disengaja: sklearn memuat libiomp lebih dulu, dan setelah
+# itu torch bisa di-import normal di mesin yang tadinya gagal. Kalau sklearn tidak ada,
+# blok ini tetap lanjut dan kegagalan torch ditangkap oleh except di bawahnya.
+try:  # pragma: no cover - jalur setup, bukan logika yang diuji
+    import sklearn  # noqa: F401
+except Exception:  # noqa: BLE001 - sklearn opsional, kegagalannya tidak fatal di sini
+    pass
+
+try:
+    import sentence_transformers  # noqa: F401
+except ImportError:
+    pytest.skip("sentence-transformers tidak terpasang", allow_module_level=True)
+except OSError as exc:  # torch gagal load DLL (mis. WinError 1114 di Windows)
+    pytest.skip(
+        f"sentence-transformers ada tapi gagal load runtime-nya: {exc}",
+        allow_module_level=True,
+    )
 
 pytestmark = pytest.mark.skipif(
-    not os.path.exists(MODEL_PATH), reason="artefak model .h5 tidak ada"
+    not os.path.exists(MODEL_PATH), reason=f"artefak bobot model tidak ada: {MODEL_PATH}"
 )
 
 ORIENTATION_HINT = (
