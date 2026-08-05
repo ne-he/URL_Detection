@@ -1,4 +1,4 @@
-# PhishGuard v3.0 (Phishing URL Detection System)
+﻿# PhishGuard v3.0 (Phishing URL Detection System)
 
 Projek ini bernama **PhishGuard v3.0** (atau **Phishing URL Detection System**). Ini adalah sistem pendeteksi URL phishing berbasis Deep Learning berkinerja tinggi yang dikemas dalam arsitektur kontainer (Docker) dan dioptimalkan untuk CPU agar dapat berjalan dengan cepat dan ringan di perangkat lokal.
 
@@ -6,30 +6,30 @@ Berikut adalah penjelasan lengkap mengenai projek ini, fitur-fiturnya (web dan b
 
 ---
 
-## 1. 🛡️ Tentang Projek (Overview)
+## 1. ðŸ›¡ï¸ Tentang Projek (Overview)
 Projek ini bertujuan untuk mendeteksi apakah suatu URL aman (*Legitimate*) atau berbahaya (*Phishing*). Sistem ini mengombinasikan kekuatan Natural Language Processing (NLP) menggunakan model sentence embedding (`all-MiniLM-L6-v2`) untuk mengubah teks URL mentah menjadi representasi vektor numerik, yang kemudian diklasifikasikan oleh arsitektur Neural Network (Keras DL).
 
 ---
 
-## 2. ✨ Fitur Lengkap Sistem
+## 2. âœ¨ Fitur Lengkap Sistem
 
 ### A. Fitur Web Dashboard (Frontend)
 Frontend dikembangkan menggunakan React + Vite dengan antarmuka bertema cyberpunk/futuristic (neon HUD, scanlines, dan efek glitch) yang sangat interaktif:
 
 * **URL Predictor**: Input URL manual untuk dianalisis oleh sistem secara instan.
 * **Voice Assistant (Speech Recognition & Synth)**:
-  * Menggunakan tombol voice di [LinkPredictor.tsx](file:///c:/Users/wilhe/OneDrive/Documents/nemi/cv/prujek/End/Product/Url_detector/src/app/components/LinkPredictor.tsx) untuk mendeteksi URL melalui suara (*speech-to-text*).
+  * Menggunakan tombol voice di [LinkPredictor.tsx](src/app/components/LinkPredictor.tsx) untuk mendeteksi URL melalui suara (*speech-to-text*).
   * Bersuara otomatis untuk membacakan hasil deteksi (*verdict*) model ke pengguna (*text-to-speech*).
 * **QR & Barcode Scanner**: Memindai QR Code dari kamera langsung atau melalui unggahan berkas gambar untuk mendeteksi URL di dalamnya menggunakan library `html5-qrcode`.
-* **D3.js Neural Network Visualizer (Cara Kerja Model)**: Visualisasi grafis struktur syaraf buatan interaktif di [NeuralNetModal.tsx](file:///c:/Users/wilhe/OneDrive/Documents/nemi/cv/prujek/End/Product/Url_detector/src/app/components/analysis/NeuralNetModal.tsx) yang menunjukkan bagaimana fitur-fitur URL memengaruhi hasil deteksi akhir.
-* **URL Character Heatmap**: Analisis tingkat risiko tiap karakter dalam URL yang diuji, menyoroti bagian yang mencurigakan (misalnya alamat IP atau karakter khusus) dengan warna merah/neon di [featureExtractor.ts](file:///c:/Users/wilhe/OneDrive/Documents/nemi/cv/prujek/End/Product/Url_detector/src/app/components/analysis/featureExtractor.ts).
-* **3D Threat Globe**: Globe 3D berputar interaktif menggunakan Three.js di [ThreatGlobe.tsx](file:///c:/Users/wilhe/OneDrive/Documents/nemi/cv/prujek/End/Product/Url_detector/src/app/components/globe/ThreatGlobe.tsx) yang memetakan asal-usul geografis URL phishing yang terdeteksi (menggunakan API geolocation IP).
+* **D3.js Neural Network Visualizer (Cara Kerja Model)**: Visualisasi grafis struktur syaraf buatan interaktif di [NeuralNetModal.tsx](src/app/components/analysis/NeuralNetModal.tsx) yang menunjukkan bagaimana fitur-fitur URL memengaruhi hasil deteksi akhir.
+* **URL Character Heatmap**: Analisis tingkat risiko tiap karakter dalam URL yang diuji, menyoroti bagian yang mencurigakan (misalnya alamat IP atau karakter khusus) dengan warna merah/neon di [featureExtractor.ts](src/app/components/analysis/featureExtractor.ts).
+* **3D Threat Globe**: Globe 3D berputar interaktif menggunakan Three.js di [ThreatGlobe.tsx](src/app/components/globe/ThreatGlobe.tsx) yang memetakan asal-usul geografis URL phishing yang terdeteksi (menggunakan API geolocation IP).
 * **Cyber Terminal Logs**: Panel log simulasi terminal bergaya retro untuk menampilkan proses analitis langkah demi langkah (Encoding URL, Vectorization, Model Inference, dll.).
-* **Gamification System (Badges & Levels)**: Memberikan poin, level (dari Script Kiddie hingga Neo), serta badges pencapaian kepada pengguna setelah melakukan pemindaian URL di [GamificationContext.tsx](file:///c:/Users/wilhe/OneDrive/Documents/nemi/cv/prujek/End/Product/Url_detector/src/app/context/GamificationContext.tsx).
+* **Gamification System (Badges & Levels)**: Memberikan poin, level (dari Script Kiddie hingga Neo), serta badges pencapaian kepada pengguna setelah melakukan pemindaian URL di [GamificationContext.tsx](src/app/context/GamificationContext.tsx).
 * **Scan History & Stats Widget**: Menyimpan riwayat prediksi secara lokal menggunakan localStorage beserta tingkat keakuratannya.
 
 ### B. Fitur Backend (API)
-Backend dikembangkan menggunakan FastAPI di [app.py](file:///c:/Users/wilhe/OneDrive/Documents/nemi/cv/prujek/End/Product/Url_detector/backend/app.py) dengan fitur utama:
+Backend dikembangkan menggunakan FastAPI di [app.py](backend/app.py) dengan fitur utama:
 
 * **Endpoint POST `/predict`**: Menerima request URL mentah, mengekstrak representasi vektor numerik menggunakan transformer, mengevaluasi di model Keras `.h5`, dan mengembalikan JSON berisi status keamanan URL:
   * `label`: `PHISHING` atau `LEGITIMATE`.
@@ -41,7 +41,7 @@ Backend dikembangkan menggunakan FastAPI di [app.py](file:///c:/Users/wilhe/OneD
 
 ---
 
-## 3. 🛠️ Teknologi yang Digunakan (Tech Stack)
+## 3. ðŸ› ï¸ Teknologi yang Digunakan (Tech Stack)
 
 | Sektor | Teknologi | Kegunaan |
 | :--- | :--- | :--- |
@@ -56,8 +56,8 @@ Backend dikembangkan menggunakan FastAPI di [app.py](file:///c:/Users/wilhe/OneD
 
 ---
 
-## 4. 📊 Dataset & Bentuk Datanya
-Dataset disimpan di berkas CSV lokal [data.csv](file:///c:/Users/wilhe/OneDrive/Documents/nemi/cv/prujek/End/Product/Url_detector/backend/data/data.csv) yang memiliki ukuran 8.2 MB dengan total 80.975 baris data.
+## 4. ðŸ“Š Dataset & Bentuk Datanya
+Dataset latih berisi 80.975 baris (8,2 MB) dan tidak ikut masuk repo karena ukurannya. Yang ikut cuma contoh 100 baris di [sample_100.csv](backend/data/sample_100.csv), dan berkas penuhnya dibangun ulang lewat [build_dataset.py](backend/scripts/build_dataset.py).
 
 Setiap baris data memiliki kolom-kolom sebagai berikut:
 * **URL**: Teks alamat URL yang diperiksa (contoh: `https://www.womensweekly.com.sg`).
@@ -80,12 +80,12 @@ Setiap baris data memiliki kolom-kolom sebagai berikut:
 * **ClassLabel**: Target kelas klasifikasi (0.0 = PHISHING, 1.0 = LEGITIMATE).
 
 > [!NOTE]
-> Meskipun dataset berisi banyak fitur ekstraksi heuristik (panjang URL, jumlah titik, dll.), pada proses pelatihan di [training.ipynb](file:///c:/Users/wilhe/OneDrive/Documents/nemi/cv/prujek/End/Product/Url_detector/backend/notebooks/training.ipynb), model hanya menggunakan teks mentah kolom URL yang kemudian dikonversi menjadi dense vector representation berkekuatan 384 dimensi menggunakan model embedding `all-MiniLM-L6-v2`. Kolom heuristik lainnya digunakan di bagian frontend untuk analisis rincian visual.
+> Meskipun dataset berisi banyak fitur ekstraksi heuristik (panjang URL, jumlah titik, dll.), pada proses pelatihan di [training.ipynb](backend/training/training.ipynb), model hanya menggunakan teks mentah kolom URL yang kemudian dikonversi menjadi dense vector representation berkekuatan 384 dimensi menggunakan model embedding `all-MiniLM-L6-v2`. Kolom heuristik lainnya digunakan di bagian frontend untuk analisis rincian visual.
 
 ---
 
-## 5. 📈 Metrik Pelatihan Model (Metrics)
-Proses pemodelan yang dilakukan dalam [training.ipynb](file:///c:/Users/wilhe/OneDrive/Documents/nemi/cv/prujek/End/Product/Url_detector/backend/notebooks/training.ipynb) menggunakan struktur Neural Network sebagai berikut:
+## 5. ðŸ“ˆ Metrik Pelatihan Model (Metrics)
+Proses pemodelan yang dilakukan dalam [training.ipynb](backend/training/training.ipynb) menggunakan struktur Neural Network sebagai berikut:
 
 **Arsitektur Model:**
 * **Input layer**: 384 Unit (berdasarkan output Sentence Transformer).
