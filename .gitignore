@@ -39,3 +39,8 @@ Thumbs.db
 backend/data/data.csv
 backend/data/data_v2.csv
 backend/data/_emb_cache.npy
+
+# konfigurasi tool lokal & spec draft, bukan bagian dari produk
+.claude/
+.flow/
+.project/
