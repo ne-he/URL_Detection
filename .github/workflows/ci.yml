@@ -7,6 +7,20 @@ on:
   workflow_dispatch:
 
 jobs:
+  # Frontend: unit test + build sungguhan. Build ikut dijalankan karena test lulus
+  # tidak menjamin bundle-nya jadi, dan yang di-deploy ke Vercel adalah hasil build.
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+
   # Cepat (<1 menit): validasi schema + seluruh alur API pakai stub predictor.
   api-tests:
     runs-on: ubuntu-latest
@@ -23,7 +37,7 @@ jobs:
           PYTHONPATH: backend
 
   # Berat (butuh torch + download MiniLM): mengunci orientasi label model asli.
-  # Jalan di push ke main & manual dispatch — tidak memperlambat PR kecil.
+  # Jalan di push ke main & manual dispatch, jadi tidak memperlambat PR kecil.
   model-regression:
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest

@@ -1,4 +1,4 @@
-# PhishGuard v2 — Architecture
+# PhishGuard v2 Architecture
 
 ```
                        ┌──────────────────────────────────────────┐
