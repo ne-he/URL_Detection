@@ -13,12 +13,12 @@ pinned: false
 
 FastAPI backend for URL phishing detection with a layered decision pipeline:
 
-1. **Blocklist** — exact URL/host match against live public phishing feeds
+1. **Blocklist**: exact URL/host match against live public phishing feeds
    (OpenPhish, Phishunt), refreshed hourly. A hit is `PHISHING` with no guessing.
-2. **Allowlist** — exact-host match against curated trusted domains (major
+2. **Allowlist**: exact-host match against curated trusted domains (major
    Indonesian institutions `.ac.id`/`.go.id`/`.co.id` + global brands). Prevents
    false positives on obviously-legit sites; subdomain-spoof safe.
-3. **Model** — the URL string is embedded with `all-MiniLM-L6-v2`
+3. **Model**: the URL string is embedded with `all-MiniLM-L6-v2`
    (sentence-transformers) and concatenated with 20 handcrafted lexical features
    (brand-mismatch, risky TLD, IP literal, entropy, digit ratio, ...). A small
    dense net (numpy forward pass, no TensorFlow at runtime) outputs P(legitimate).
