@@ -173,6 +173,30 @@ Frontend env (Vite, set in `.env.local` or Vercel):
 | `VITE_API_BASE` | `https://ne-he-phisguard-api.hf.space` | Backend base URL the UI calls. Blank or whitespace is treated as unset |
 | `VITE_FEATURE_*` | on | Feature flags (shader, globe, voice, gamification) |
 
+## Deploy
+
+Both halves ship from this repo.
+
+**Backend to Hugging Face.** A free HF account can only use ZeroGPU hardware for Gradio
+Spaces (Docker and CPU-basic are locked behind a paid plan), which is why the entrypoint is
+`gradio.Server` and why a dummy `@spaces.GPU` function exists. Deploy by pushing the contents
+of `backend/` to the Space git remote:
+
+```bash
+git clone https://huggingface.co/spaces/ne-he/phisguard-api space
+cp -r backend/* space/ && cd space && git add -A && git commit -m "sync" && git push
+```
+
+**Frontend to Vercel.** Import this repo as a Vercel project (framework auto-detects as Vite,
+root directory `./`). No environment variable is required: the build already targets the Space
+above. Set `VITE_API_BASE` only to point at a different backend.
+
+One caveat worth knowing: `hci-update.vercel.app` is a Vercel project that belongs to the same
+owner but whose git is wired to the *group* repo at an old commit, where the backend URL is
+hardcoded to `http://127.0.0.1:8000`. Pushing here does not update that site, and no env var
+can fix it, because that build never read one. It needs either a fresh Vercel project pointed
+at this repo, or its git connection switched over.
+
 ## Repo layout
 
 One repo, both halves.
