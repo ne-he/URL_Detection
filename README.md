@@ -10,8 +10,8 @@ URL phishing detection, full stack. The React frontend (cyber dark UI, PWA, thre
 
 | | |
 |---|---|
+| Frontend | <https://url-detection-one.vercel.app> |
 | Backend API | <https://ne-he-phisguard-api.hf.space> ([`/docs`](https://ne-he-phisguard-api.hf.space/docs), [`/health`](https://ne-he-phisguard-api.hf.space/health)) |
-| Frontend | deployed from this repo on Vercel; the UI calls the API above by default |
 
 Both halves live in this one repo: frontend at the root, backend under [`backend/`](backend/).
 The Hugging Face Space is deployed from `backend/` by pushing that subtree to the Space
@@ -189,7 +189,13 @@ cp -r backend/* space/ && cd space && git add -A && git commit -m "sync" && git 
 
 **Frontend to Vercel.** Import this repo as a Vercel project (framework auto-detects as Vite,
 root directory `./`). No environment variable is required: the build already targets the Space
-above. Set `VITE_API_BASE` only to point at a different backend.
+above. Set `VITE_API_BASE` only to point at a different backend. `url-detection-one.vercel.app`
+is that project, built from `main` of this repo.
+
+The Space sleeps after 48 hours with no traffic (`gcTimeout` 172800). The first request after
+that has to wait for a cold start, which is longer than the frontend is willing to wait, so it
+shows "cannot reach the backend". Hitting [`/health`](https://ne-he-phisguard-api.hf.space/health)
+once wakes it.
 
 One caveat worth knowing: `hci-update.vercel.app` is a Vercel project that belongs to the same
 owner but whose git is wired to the *group* repo at an old commit, where the backend URL is
