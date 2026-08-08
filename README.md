@@ -192,10 +192,16 @@ root directory `./`). No environment variable is required: the build already tar
 above. Set `VITE_API_BASE` only to point at a different backend. `url-detection-one.vercel.app`
 is that project, built from `main` of this repo.
 
-The Space sleeps after 48 hours with no traffic (`gcTimeout` 172800). The first request after
-that has to wait for a cold start, which is longer than the frontend is willing to wait, so it
-shows "cannot reach the backend". Hitting [`/health`](https://ne-he-phisguard-api.hf.space/health)
-once wakes it.
+**Keeping the Space awake.** It sleeps after 48 hours with no traffic (`gcTimeout` 172800), and
+the first visitor after that pays the cold start. Three things cover it, in order of who notices:
+
+1. `.github/workflows/keep-warm.yml` pings `/health` every 8 hours, so in practice it never
+   sleeps. GitHub disables scheduled workflows on repos with no commits for 60 days, so this is
+   a guard, not a guarantee.
+2. The frontend pings `/health` on page load, so the wake-up starts while the visitor is still
+   reading rather than after they click Analyze.
+3. If a scan still lands on a sleeping Space, the request times out at 20s and retries once with
+   a 150s window while the UI says the backend is waking. Only after that does it give up.
 
 One caveat worth knowing: `hci-update.vercel.app` is a Vercel project that belongs to the same
 owner but whose git is wired to the *group* repo at an old commit, where the backend URL is

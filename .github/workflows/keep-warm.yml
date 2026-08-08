@@ -1,0 +1,35 @@
+name: Keep Space warm
+
+# Space di Hugging Face punya gcTimeout 172800 detik: 48 jam tanpa satu pun request
+# dan dia dimatikan. Pengunjung pertama sesudah itu yang menanggung cold start-nya.
+# Ping tiap 8 jam memberi ruang cukup kalau beberapa jadwal meleset atau dilewat.
+#
+# Catatan: GitHub menonaktifkan workflow terjadwal di repo yang 60 hari tidak ada
+# commit. Kalau repo ini nanti anteng lama, jadwal ini mati sendiri dan Space-nya
+# kembali bisa tidur. Cek tab Actions kalau situsnya tiba-tiba lambat di scan pertama.
+on:
+  schedule:
+    - cron: "0 */8 * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping /health sampai Space bangun
+        run: |
+          URL="https://ne-he-phisguard-api.hf.space/health"
+          for attempt in 1 2 3; do
+            # --max-time longgar: kalau Space-nya memang tidur, request ini yang
+            # menanggung cold start, dan itu justru tujuannya.
+            body=$(curl -s --max-time 300 -w '\n%{http_code}' "$URL") || body=""
+            code=$(printf '%s' "$body" | tail -n1)
+            echo "attempt $attempt: HTTP ${code:-timeout}"
+            if [ "$code" = "200" ]; then
+              printf '%s' "$body" | head -n-1
+              exit 0
+            fi
+            sleep 30
+          done
+          echo "::error::Space tidak balik 200 setelah 3 percobaan. Cek https://huggingface.co/spaces/ne-he/phisguard-api"
+          exit 1

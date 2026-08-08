@@ -25,6 +25,26 @@ function saveHistory(h: PredictionRecord[]) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(h.slice(0, 50)));
 }
 
+// Space di Hugging Face tidur setelah 48 jam tanpa traffic, dan bangunnya bisa lebih
+// dari satu menit. Tanpa batas waktu, fetch yang menunggu cold start menggantung tanpa
+// ujung dan progress bar berhenti di 98% selamanya.
+async function postPredict(target: string, timeoutMs: number) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const res = await fetch(`${API_BASE}/predict`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: target }),
+      signal: ctrl.signal,
+    });
+    if (!res.ok) throw new Error(`Backend error ${res.status}`);
+    return await res.json();
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 function CyberCard({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
   return (
     <div style={{ background: "rgba(8,14,14,0.88)", backdropFilter: "blur(14px)", border: "1px solid rgba(0,255,157,0.18)", borderRadius: 16, boxShadow: "0 0 30px rgba(0,255,157,0.05)", ...style }}>{children}</div>
@@ -69,6 +89,13 @@ export function LinkPredictor({ initialUrl = "" }: { initialUrl?: string }) {
     if (terminalRef.current) terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
   }, [terminalLogs]);
 
+  // Bangunin Space-nya begitu halaman dibuka, jangan tunggu pengunjung klik Analyze.
+  // Kalau dia lagi tidur, proses bangun sudah jalan duluan sementara orangnya masih
+  // baca-baca, jadi scan pertama tidak kena penuh cold start-nya.
+  useEffect(() => {
+    fetch(`${API_BASE}/health`).catch(() => {});
+  }, []);
+
   const addLog = (msg: string) => {
     const ts = new Date().toLocaleTimeString("en-US", { hour12: false });
     setTerminalLogs((p) => [...p, `[${ts}] ${msg}`]);
@@ -92,10 +119,10 @@ export function LinkPredictor({ initialUrl = "" }: { initialUrl?: string }) {
   };
 
   const handleAnalyze = async () => {
-    if (!url.trim()) return alert("Masukkan URL dulu");
+    if (!url.trim()) return setToast("Masukkan URL dulu");
     if (!navigator.onLine) {
       addLog("ERROR: No internet connection");
-      setToast("Offline — tidak bisa menganalisis URL");
+      setToast("Offline, tidak bisa menganalisis URL");
       return;
     }
     setPulseKey((k) => k + 1);
@@ -110,11 +137,16 @@ export function LinkPredictor({ initialUrl = "" }: { initialUrl?: string }) {
     setTimeout(() => addLog("Post-processing..."), 3600);
     setTimeout(() => addLog("Finalizing..."), 4400);
     try {
-      const res = await fetch(`${API_BASE}/predict`, {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url }),
-      });
-      if (!res.ok) throw new Error("Backend error");
-      const data = await res.json();
+      let data;
+      try {
+        data = await postPredict(url, 20000);
+      } catch {
+        // Gagal cepat hampir selalu berarti Space-nya lagi bangun, bukan mati. Coba
+        // sekali lagi dengan jendela panjang, dan bilang ke pengunjung kenapa lama.
+        addLog("Backend sedang bangun dari sleep, menunggu...");
+        setToast("Backend lagi bangun, tunggu sebentar");
+        data = await postPredict(url, 150000);
+      }
       setTimeout(() => {
         clearInterval(iv); setProgress(100); setLabel(data.label); setAccuracy(data.confidence);
         setLegitProb(data.legitimate_chance); setIsAnalyzing(false);
@@ -132,8 +164,8 @@ export function LinkPredictor({ initialUrl = "" }: { initialUrl?: string }) {
         }, 20);
       }, 5000);
     } catch (err) {
-      clearInterval(iv); setIsAnalyzing(false); addLog("ERROR: backend unreachable");
-      alert("Tidak bisa terhubung ke FastAPI"); console.error(err);
+      clearInterval(iv); setIsAnalyzing(false); setProgress(0); addLog("ERROR: backend unreachable");
+      setToast("Backend belum siap, coba lagi sebentar lagi"); console.error(err);
     }
   };
 
@@ -179,7 +211,7 @@ export function LinkPredictor({ initialUrl = "" }: { initialUrl?: string }) {
         <h1 style={{ fontSize: 34, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase", margin: "0 0 6px 0" }}>
           <GlitchText text="Link Predictor" />
         </h1>
-        <p style={{ fontSize: 11, letterSpacing: "0.25em", color: "rgba(0,255,255,0.5)", margin: 0 }}>DEEP LEARNING PHISHING DETECTION SYSTEM v3.0</p>
+        <p style={{ fontSize: 11, letterSpacing: "0.25em", color: "rgba(0,255,255,0.5)", margin: 0 }}>DEEP LEARNING PHISHING DETECTION SYSTEM v2.2</p>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginTop: 12 }}>
           <div style={{ height: 1, width: 100, background: "linear-gradient(90deg, transparent, #00ff9d)" }} />
           <span style={{ color: "#00ff9d", textShadow: "0 0 8px #00ff9d" }}>&#9670;</span>
@@ -395,7 +427,7 @@ export function LinkPredictor({ initialUrl = "" }: { initialUrl?: string }) {
 
       <ToastNotification message={toast} onDone={() => setToast(null)} />
 
-      {/* ThreatGlobe — lazy loaded */}
+      {/* ThreatGlobe, lazy loaded */}
       <div style={{ marginTop: 32 }}>
         <Suspense fallback={<div style={{ height: 400, display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(0,255,157,0.3)", fontFamily: "monospace", fontSize: 12 }}>Loading Globe...</div>}>
           <ThreatGlobe />

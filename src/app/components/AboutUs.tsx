@@ -1,8 +1,10 @@
-import { Target, Zap, Shield, TrendingUp, Github as GithubIcon } from "lucide-react";
+import { Target, Layers, Shield, FileSearch, Github as GithubIcon } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import { GlitchText } from "./GlitchText";
 import { NeonSeparator } from "./NeonSeparator";
 import { CollaboratorCard } from "./CollaboratorCard";
+
+const REPO_URL = "https://github.com/ne-he/URL_Detection";
 
 const staggerContainer = {
   hidden: {},
@@ -13,30 +15,32 @@ const fadeUp = {
   show: { opacity: 1, y: 0, transition: { duration: 0.25 } },
 };
 
+// Klaim di halaman ini sengaja dibatasi ke yang bisa dibuktikan dari repo: angka
+// diambil dari docs/EVAL.md, dan urutan layer sesuai app/threat.py + app/predictor.py.
 const features = [
   {
     icon: <Target size={20} color="#00ff9d" />,
-    title: "Accurate Predictions",
+    title: "Measured, Not Claimed",
     description:
-      "Deep learning model trained on thousands of URLs delivers high-precision phishing detection.",
+      "95.7% accuracy and 95.8% recall on a 1,000-URL holdout that never entered training. The full report is in the repo.",
   },
   {
-    icon: <Zap size={20} color="#00ff9d" />,
-    title: "Fast Analysis",
+    icon: <Layers size={20} color="#00ff9d" />,
+    title: "Layered Checks",
     description:
-      "Real-time URL analysis completes in seconds, so you stay protected without slowing down.",
+      "A live phishing blocklist runs first, then a curated allowlist, and only then the model. Every response says which layer decided.",
   },
   {
     icon: <Shield size={20} color="#00ff9d" />,
-    title: "Privacy First",
+    title: "Nothing Kept",
     description:
-      "URLs are analyzed locally without storing your data. Your browsing stays private.",
+      "The URL is sent to the API to be scored and is not logged or stored. Your scan history stays in your own browser.",
   },
   {
-    icon: <TrendingUp size={20} color="#00ff9d" />,
-    title: "Continuous Improvement",
+    icon: <FileSearch size={20} color="#00ff9d" />,
+    title: "Open About Its Limits",
     description:
-      "The model is regularly updated with new phishing patterns to stay ahead of threats.",
+      "The known failure modes are documented, including the model's bias against legitimate login pages.",
   },
 ];
 
@@ -61,7 +65,7 @@ export function AboutUs() {
             {/* Header */}
             <div>
               <GlitchText
-                text="About Link Predictor"
+                text="About PhishGuard"
                 style={{
                   fontSize: 32,
                   fontWeight: 800,
@@ -81,10 +85,10 @@ export function AboutUs() {
                   textTransform: "uppercase",
                 }}
               >
-                PHISHING DETECTION SYSTEM v3.0
+                PHISHING DETECTION SYSTEM v2.2
               </p>
 
-              {/* Decorative divider — two gradient lines + diamond */}
+              {/* Decorative divider: two gradient lines + diamond */}
               <div
                 style={{
                   display: "flex",
@@ -135,13 +139,14 @@ export function AboutUs() {
                 margin: 0,
               }}
             >
-              PhishGuard is an advanced phishing detection system powered by
-              deep learning. Using a fine-tuned sentence transformer model, it
-              analyzes URLs in real-time to identify malicious links with high
-              accuracy — protecting users before they click.
+              PhishGuard reads a URL the way an attacker writes one. The address is
+              embedded with a sentence transformer and combined with 20 handcrafted
+              lexical signals, then scored by a small dense network. No page is
+              visited and no site is downloaded: the verdict comes from the address
+              alone, which is why it answers in a second.
             </p>
 
-            <NeonSeparator label="OUR MISSION" />
+            <NeonSeparator label="WHY IT EXISTS" />
 
             {/* Mission */}
             <p
@@ -152,13 +157,13 @@ export function AboutUs() {
                 margin: 0,
               }}
             >
-              Our mission is to make the internet safer by giving everyone
-              access to professional-grade phishing detection. We believe
-              security tools should be fast, accessible, and transparent — no
-              technical expertise required.
+              Most demo detectors report one accuracy number and stop there. This one
+              publishes the confusion matrix, the adversarial breakdown, and the cases
+              it still gets wrong, because a security tool that hides its failure modes
+              is asking to be trusted further than it has earned.
             </p>
 
-            <NeonSeparator label="WHAT WE OFFER" />
+            <NeonSeparator label="WHAT IT DOES" />
 
             {/* Feature grid 2x2 */}
             <div
@@ -213,33 +218,80 @@ export function AboutUs() {
 
           {/* ── Right Column ── */}
           <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-            <NeonSeparator label="CORE COLLABORATORS" />
+            <NeonSeparator label="BUILT BY" />
 
-            {/* Collaborator cards */}
             <motion.div
               variants={shouldReduceMotion ? undefined : staggerContainer}
               initial="hidden"
               animate="show"
               style={{ display: "flex", flexDirection: "column", gap: 16 }}
             >
-              {[
-                { name: "Nehemiah Gantenk Abiez", role: "Nehemiah Wilhelmus Junaidi 2802409874", description: "Frontend Developer - Crafted the sleek UI and seamless user experience of our phishing detection system, making security accessible to all." },
-                { name: "Adhikaxx88", role: "Adhika Gunawan 2802438205", description: "Backend Developer and AI Engineer - Developed the core deep learning model and backend infrastructure that powers our real-time phishing detection system, ensuring fast and accurate analysis of URLs." },
-                { name: "Alvin", role: "Alvin Wijaya 2802393062", description: "UI/UX Designer - Designed the intuitive and visually striking interface for our phishing detection system, creating a user-friendly experience that makes online security accessible to everyone." },
-                { name: "Felix", role: "Felix Yung 2802394462", description: "Frontend Developer - Implemented the responsive and engaging user interface for our phishing detection system, ensuring a seamless experience across devices while maintaining a strong focus on usability and aesthetics." },
-                { name: "Daniel", role: "Daniel Sebastian Winata 2802392652", description: "UI/UX Designer - Crafted the user interface and experience for our phishing detection system, focusing on creating an intuitive and visually appealing design that empowers users to stay safe online with ease." },
-                { name: "Andrewyungg", role: "Andrew Yung 2802394424", description: "Frontend Developer - Developed the dynamic and user-friendly interface for our phishing detection system, ensuring that users can easily navigate and utilize the tool to protect themselves from online threats." },
-                { name: "Tokesi", role: "Tokesi Lukynawa 2802394525", description: "UI/UX Designer - Designed the user interface and experience for our phishing detection system, creating an intuitive and visually appealing design that empowers users to stay safe online with ease." },
-              ].map((c) => (
-                <motion.div key={c.name} variants={shouldReduceMotion ? undefined : fadeUp}>
-                  <CollaboratorCard name={c.name} role={c.role} description={c.description} />
-                </motion.div>
-              ))}
+              <motion.div variants={shouldReduceMotion ? undefined : fadeUp}>
+                <CollaboratorCard
+                  name="Nehemiah Wilhelmus Junaidi"
+                  role="Data Science, Bina Nusantara"
+                  githubUrl="https://github.com/ne-he"
+                  description="Built the v2 detector end to end: dataset, feature engineering, training, the FastAPI service, the threat layers, the test suite, and this interface. Runs on Hugging Face Spaces and Vercel."
+                />
+              </motion.div>
             </motion.div>
 
+            <NeonSeparator label="UNDER THE HOOD" />
+
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 10,
+                color: "rgba(224,224,224,0.6)",
+                fontSize: 12,
+                lineHeight: 1.7,
+              }}
+            >
+              {[
+                ["Embedding", "all-MiniLM-L6-v2, 384 dimensions"],
+                ["Features", "20 lexical signals, 404-d input in total"],
+                ["Classifier", "dense 404 to 128 to 64 to 1, numpy forward pass"],
+                ["Serving", "FastAPI on Hugging Face Spaces"],
+                ["Interface", "React and Vite on Vercel"],
+              ].map(([k, v]) => (
+                <div
+                  key={k}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    gap: 12,
+                    borderBottom: "1px solid rgba(0,255,157,0.08)",
+                    paddingBottom: 8,
+                  }}
+                >
+                  <span style={{ color: "rgba(0,255,255,0.7)", flexShrink: 0 }}>{k}</span>
+                  <span style={{ textAlign: "right" }}>{v}</span>
+                </div>
+              ))}
+            </div>
+
+            <NeonSeparator label="HISTORY" />
+
+            <p
+              style={{
+                color: "rgba(224,224,224,0.55)",
+                fontSize: 12,
+                lineHeight: 1.8,
+                margin: 0,
+              }}
+            >
+              v1 was a university group project where my part was the frontend. v2 is a
+              solo rebuild: the model was retrained, the backend was written from
+              scratch, and the parts that were quietly broken in v1 were fixed and
+              locked with tests. Everything you are using here comes from that rebuild.
+            </p>
+
             {/* View GitHub button */}
-            <button
-              onClick={() => window.open("https://github.com", "_blank")}
+            <a
+              href={REPO_URL}
+              target="_blank"
+              rel="noopener noreferrer"
               style={{
                 width: "100%",
                 padding: "12px",
@@ -251,16 +303,18 @@ export function AboutUs() {
                 fontWeight: 700,
                 letterSpacing: "0.15em",
                 textTransform: "uppercase",
+                textDecoration: "none",
                 cursor: "pointer",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 gap: 8,
+                boxSizing: "border-box",
               }}
             >
               <GithubIcon size={16} />
-              View GitHub
-            </button>
+              View Source
+            </a>
           </div>
         </div>
       </div>
