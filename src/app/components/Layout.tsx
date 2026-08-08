@@ -98,7 +98,7 @@ export function Layout() {
               <p style={{ fontSize: 13, fontWeight: 700, letterSpacing: "0.15em", color: "var(--cyber-accent)", textShadow: "0 0 10px var(--cyber-accent)", textTransform: "uppercase" }}>
                 PhishGuard
               </p>
-              <p style={{ fontSize: 10, color: "rgba(224,224,224,0.35)", letterSpacing: "0.1em" }}>v3.0</p>
+              <p style={{ fontSize: 10, color: "rgba(224,224,224,0.35)", letterSpacing: "0.1em" }}>v2.2</p>
             </div>
           </div>
         </div>
