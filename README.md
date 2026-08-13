@@ -4,7 +4,7 @@ URL phishing detection, full stack. The React frontend (cyber dark UI, PWA, thre
 
 **How it works:** the URL string is embedded with `all-MiniLM-L6-v2` (sentence-transformers) and concatenated with 20 handcrafted lexical features, then a small dense network (numpy forward pass, no TensorFlow at runtime) outputs P(legitimate). Trained on a balanced 20k subsample of a 132k-URL dataset; see [`backend/README.md`](backend/README.md) for where that data came from and why it ages badly.
 
-**Credits:** PhishGuard started as a 7-person university group project (Nehemiah Wilhelmus Junaidi, Adhika Gunawan, Alvin Wijaya, Felix Yung, Daniel Sebastian Winata, Andrew Yung, Tokesi Lukynawa), where my role was frontend development; the v2 rebuild in this repo (backend, hardening, evaluation) is my own work.
+**Credits:** This repo is my own work. PhishGuard started as a university group project where my role was frontend development; v2 is a solo rebuild, and the dataset, model, backend, threat layers, tests, evaluation, and deployment here are all mine.
 
 ## Live
 

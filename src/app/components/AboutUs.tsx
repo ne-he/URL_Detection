@@ -281,10 +281,12 @@ export function AboutUs() {
                 margin: 0,
               }}
             >
-              v1 was a university group project where my part was the frontend. v2 is a
-              solo rebuild: the model was retrained, the backend was written from
-              scratch, and the parts that were quietly broken in v1 were fixed and
-              locked with tests. Everything you are using here comes from that rebuild.
+              This version is mine end to end. The dataset, the retrained model, the
+              FastAPI service, the threat layers, the test suite, the deployment, and
+              this interface were all built for v2, and the parts that were quietly
+              broken before were fixed and locked with tests. PhishGuard began as a
+              university group project where I worked on the frontend, and none of that
+              original backend is still running here.
             </p>
 
             {/* View GitHub button */}
