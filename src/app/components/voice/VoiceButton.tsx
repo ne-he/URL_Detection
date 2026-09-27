@@ -30,7 +30,7 @@ export function VoiceButton({ onUrlDetected, onShowHistory }: VoiceButtonProps) 
         onShowHistory?.();
         break;
       case 'phishing_info':
-        // Show info in terminal or toast — handled by parent
+        // Show info in terminal or toast: handled by parent
         break;
     }
   }, [setCurrentUrl, onUrlDetected, onShowHistory]);
@@ -43,7 +43,7 @@ export function VoiceButton({ onUrlDetected, onShowHistory }: VoiceButtonProps) 
     localStorage.setItem('phishguard_speech_enabled', String(next));
   };
 
-  // Suppress unused variable warning — lastTranscript is available for parent use via onCommand
+  // Suppress unused variable warning: lastTranscript is available for parent use via onCommand
   void lastTranscript;
 
   if (!isSupported) return null;

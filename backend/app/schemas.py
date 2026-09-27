@@ -27,7 +27,7 @@ class URLRequest(BaseModel):
         if len(v) > MAX_URL_LENGTH:
             raise ValueError(f"URL terlalu panjang (maks {MAX_URL_LENGTH} karakter)")
         # Tolak skema non-URL tanpa "//" (javascript:, mailto:, data:) SEBELUM
-        # auto-prepend http:// — kalau tidak, "javascript:alert(1)" jadi host valid.
+        # auto-prepend http://. Kalau tidak, "javascript:alert(1)" jadi host valid.
         # "(?!\d)" membedakan skema dari port (example.com:8080 tetap boleh).
         if re.match(r"^[a-zA-Z][a-zA-Z0-9+.\-]*:(?!//)(?!\d)", v):
             raise ValueError("Skema URL harus http/https")

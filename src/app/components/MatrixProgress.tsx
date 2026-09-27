@@ -30,7 +30,7 @@ export function MatrixProgress({ progress }: MatrixProgressProps) {
     }
 
     const draw = () => {
-      // Semi-transparent fade — darker = longer trails
+      // Semi-transparent fade: darker = longer trails
       ctx.fillStyle = "rgba(5, 10, 10, 0.25)";
       ctx.fillRect(0, 0, W, H);
 
@@ -43,14 +43,14 @@ export function MatrixProgress({ progress }: MatrixProgressProps) {
         const y = dropsRef.current[i];
         const char = CHARS[Math.floor(Math.random() * CHARS.length)];
 
-        // Head — bright cyan/white
+        // Head: bright cyan/white
         ctx.font = "bold 11px monospace";
         ctx.fillStyle = "#ffffff";
         ctx.shadowColor = "#00ffff";
         ctx.shadowBlur = 8;
         ctx.fillText(char, colX, y);
 
-        // Trail — neon green, fading
+        // Trail: neon green, fading
         ctx.font = "11px monospace";
         for (let t = 1; t <= 5; t++) {
           const alpha = 1 - t * 0.18;

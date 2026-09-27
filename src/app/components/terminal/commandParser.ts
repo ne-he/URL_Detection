@@ -42,11 +42,11 @@ export function parseCommand(input: string): CommandResult {
 }
 
 export const COMMAND_HELP = [
-  'scan <url>     — Analyze a URL',
-  'history        — Show last 10 scans',
-  'stats          — Show scan statistics',
-  'clear          — Clear terminal output',
-  'theme <name>   — Change theme (neon-noir | crimson-dawn | arctic-hack)',
-  'export         — Download scan history as JSON',
-  'help           — Show this help',
+  'scan <url>       Analyze a URL',
+  'history          Show last 10 scans',
+  'stats            Show scan statistics',
+  'clear            Clear terminal output',
+  'theme <name>     Change theme (neon-noir | crimson-dawn | arctic-hack)',
+  'export           Download scan history as JSON',
+  'help             Show this help',
 ];

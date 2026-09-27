@@ -47,6 +47,6 @@ def client() -> TestClient:
 
 @pytest.fixture
 def sick_client() -> TestClient:
-    """App yang model-nya gagal load — untuk menguji /health jujur."""
+    """App yang model-nya gagal load, untuk menguji /health jujur."""
     app = create_app(settings=_test_settings(), predictor=StubPredictor(ready=False))
     return TestClient(app)

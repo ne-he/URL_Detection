@@ -1,4 +1,4 @@
-"""Unit test blocklist — logika match tanpa ambil feed dari jaringan."""
+"""Unit test blocklist: logika match tanpa ambil feed dari jaringan."""
 from __future__ import annotations
 
 from app.threat import Blocklist, in_allowlist, _canon, _host

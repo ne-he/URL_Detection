@@ -17,7 +17,7 @@ export function TerminalModal() {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
   const [lines, setLines] = useState<TerminalLine[]>([
-    { id: lineCounter++, text: 'PhishGuard Terminal v2.0 — Type "help" for commands', type: 'system' },
+    { id: lineCounter++, text: 'PhishGuard Terminal v2.0 · Type "help" for commands', type: 'system' },
   ]);
   const inputRef = useRef<HTMLInputElement>(null);
   const outputRef = useRef<HTMLDivElement>(null);

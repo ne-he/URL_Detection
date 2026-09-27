@@ -13,7 +13,7 @@ const vertexShader = `
   }
 `;
 
-// Fragment shader — data stream wave effect
+// Fragment shader: data stream wave effect
 const fragmentShader = `
   uniform float uTime;
   uniform float uIntensity;

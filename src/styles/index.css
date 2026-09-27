@@ -75,14 +75,14 @@
 
 /* ── CYBER UI ENHANCEMENT ── */
 
-/* Pulse neon — tombol Analyze saat diklik */
+/* Pulse neon: tombol Analyze saat diklik */
 @keyframes cyber-btn-pulse {
   0%   { box-shadow: 0 0 0 0 rgba(0,255,157,0.7); }
   70%  { box-shadow: 0 0 0 12px rgba(0,255,157,0); }
   100% { box-shadow: 0 0 0 0 rgba(0,255,157,0); }
 }
 
-/* CyberSweep — garis bawah input saat fokus */
+/* CyberSweep: garis bawah input saat fokus */
 @keyframes cyber-sweep-line {
   0%   { transform: scaleX(0); transform-origin: left; }
   100% { transform: scaleX(1); transform-origin: left; }

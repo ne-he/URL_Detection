@@ -1,4 +1,4 @@
-# Dependensi test API (ringan — TANPA TensorFlow).
+# Dependensi test API (ringan: TANPA TensorFlow).
 # Test regresi label butuh requirements.txt penuh (jalan di Docker/CI).
 fastapi>=0.111
 pydantic>=2.7

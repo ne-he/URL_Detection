@@ -1,4 +1,4 @@
-"""Regression test orientasi label — MENGUNCI konvensi 0.0=phishing, 1.0=legitimate.
+"""Regression test orientasi label: MENGUNCI konvensi 0.0=phishing, 1.0=legitimate.
 
 Kalau model di-retrain dengan LabelEncoder yang arahnya kebalik, test ini yang
 menangkapnya SEBELUM model salah kaprah masuk produksi. Butuh
@@ -41,7 +41,7 @@ pytestmark = pytest.mark.skipif(
 )
 
 ORIENTATION_HINT = (
-    "ORIENTASI LABEL KEMUNGKINAN KEBALIK — cek arah LabelEncoder / mapping label "
+    "ORIENTASI LABEL KEMUNGKINAN KEBALIK: cek arah LabelEncoder / mapping label "
     "di pipeline training (konvensi: 0.0=phishing, 1.0=legitimate)."
 )
 

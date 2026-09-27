@@ -3,7 +3,7 @@ import Particles, { initParticlesEngine } from "@tsparticles/react";
 import { loadSlim } from "@tsparticles/slim";
 import type { ISourceOptions } from "@tsparticles/engine";
 
-// Singleton init — only runs once across the app lifetime
+// Singleton init: only runs once across the app lifetime
 let engineInitialized = false;
 let enginePromise: Promise<void> | null = null;
 

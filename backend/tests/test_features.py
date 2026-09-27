@@ -1,4 +1,4 @@
-"""Unit test ekstraktor fitur lexical — deterministik, tanpa torch/jaringan."""
+"""Unit test ekstraktor fitur lexical, deterministik, tanpa torch/jaringan."""
 from __future__ import annotations
 
 from app.features import FEATURE_NAMES, N_FEATURES, extract_batch, extract_one

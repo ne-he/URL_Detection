@@ -76,12 +76,12 @@ export function useAudioFeedback() {
         volume: 0.4,
         rate: pitch,
         onplayerror: () => {
-          // Autoplay blocked — fail silently
+          // Autoplay blocked: fail silently
         },
       });
       howlRef.current.play();
     } catch {
-      // Audio not available — fail silently
+      // Audio not available: fail silently
     }
   }, []);
 

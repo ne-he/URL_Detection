@@ -27,7 +27,7 @@ def test_predict_contract_v1_compatible(client):
     r = client.post("/predict", json={"url": "https://www.google.com"})
     assert r.status_code == 200
     body = r.json()
-    # Kontrak v1 harus tetap ada — frontend lama bergantung ke field ini.
+    # Kontrak v1 harus tetap ada, frontend lama bergantung ke field ini.
     for field in ("url", "label", "confidence", "legitimate_chance", "is_dangerous"):
         assert field in body
     assert body["label"] == "LEGITIMATE"

@@ -71,6 +71,6 @@ export function saveGamificationState(state: GamificationState): void {
   try {
     localStorage.setItem('phishguard_gamification', JSON.stringify(state));
   } catch {
-    // quota exceeded — fail silently
+    // quota exceeded: fail silently
   }
 }

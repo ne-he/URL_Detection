@@ -1,4 +1,4 @@
-"""Konfigurasi runtime — semua dari environment variable, tanpa hardcode.
+"""Konfigurasi runtime: semua dari environment variable, tanpa hardcode.
 
 Kenapa env: nilai-nilai ini beda antara lokal / Docker / production,
 dan threshold bukan keputusan kode melainkan keputusan operasional.
@@ -15,7 +15,7 @@ def _parse_origins(raw: str) -> list[str]:
 
 @dataclass(frozen=True)
 class Settings:
-    # CORS: origin spesifik (comma-separated). TIDAK pernah "*" bareng credentials —
+    # CORS: origin spesifik (comma-separated). TIDAK pernah "*" bareng credentials:
     # kombinasi itu ditolak spec browser dan membuka credentialed request dari origin manapun.
     frontend_origins: list[str] = field(
         default_factory=lambda: _parse_origins(

@@ -50,7 +50,7 @@ export function speakVerdict(label: string, confidence: number, enabled: boolean
     utterance.volume = 0.8;
     window.speechSynthesis.speak(utterance);
   } catch {
-    // Speech synthesis not available — fail silently
+    // Speech synthesis not available: fail silently
   }
 }
 
