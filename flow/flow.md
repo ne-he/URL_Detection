@@ -1,4 +1,6 @@
-﻿# PhishGuard v3.0 (Phishing URL Detection System)
+# PhishGuard v3.0 (Phishing URL Detection System)
+
+> **Catatan (Nov 2026): dokumen ini arsip lama.** Nama "v3.0", model Keras, 80.975 baris data, dan akurasi 97,08% di bawah ini bukan kondisi sekarang. Versi yang berlaku adalah PhishGuard v2.2, lihat `README.md`, `docs/EVAL.md`, dan `docs/PANDUAN_PROJEK.md`.
 
 Projek ini bernama **PhishGuard v3.0** (atau **Phishing URL Detection System**). Ini adalah sistem pendeteksi URL phishing berbasis Deep Learning berkinerja tinggi yang dikemas dalam arsitektur kontainer (Docker) dan dioptimalkan untuk CPU agar dapat berjalan dengan cepat dan ringan di perangkat lokal.
 
