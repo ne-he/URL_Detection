@@ -279,3 +279,43 @@ Data kelas legitimate. Tambah URL sah yang punya path, query, dan alur login sun
 
 **8. "Berapa biaya hosting-nya?"**
 Nol. Frontend di Vercel, backend di Hugging Face Space gratis, CI dan keep-warm di GitHub Actions.
+
+## 12. Kamus istilah
+
+| Istilah | Artinya dalam bahasa sederhana |
+|---|---|
+| Phishing | Halaman palsu yang menyamar jadi situs asli untuk mencuri data login atau kartu |
+| URL | Alamat web lengkap, misalnya `https://binus.ac.id/` |
+| Host / domain | Bagian nama situs di URL, misalnya `binus.ac.id` |
+| Blocklist | Daftar hitam: URL yang sudah diketahui phishing |
+| Allowlist | Daftar putih: situs yang dianggap pasti aman |
+| Feed | Daftar yang diperbarui terus dari internet, di sini OpenPhish dan Phishunt |
+| Embedding | Cara mengubah teks jadi deretan angka supaya bisa diolah model |
+| MiniLM | Model kecil pembuat embedding, keluarannya 384 angka |
+| Fitur leksikal | Ciri yang dihitung langsung dari teks URL, seperti panjang, jumlah titik, atau TLD |
+| TLD | Akhiran domain, seperti `.com`, `.xyz`, `.id` |
+| Dense layer | Lapisan jaringan saraf di mana setiap neuron terhubung ke semua input |
+| Sigmoid | Fungsi yang memeras angka apa pun jadi nilai 0 sampai 1, dibaca sebagai peluang |
+| Forward pass | Proses menghitung output model dari input, tanpa belajar |
+| Threshold | Batas angka untuk memutuskan label, di sini 0,5 |
+| Holdout | Data yang disimpan terpisah dan tidak pernah dilihat model saat belajar |
+| Accuracy | Persentase tebakan yang benar secara keseluruhan |
+| Precision | Dari semua yang dituduh phishing, berapa persen yang memang phishing |
+| Recall | Dari semua phishing yang ada, berapa persen yang berhasil ditangkap |
+| F1 | Rata-rata seimbang antara precision dan recall |
+| ROC-AUC | Ukuran seberapa baik model memisahkan dua kelas di semua threshold, 1,0 berarti sempurna |
+| False positive | Situs aman yang salah dituduh phishing |
+| False negative | Situs phishing yang lolos dianggap aman |
+| Adversarial set | Kumpulan contoh yang sengaja dibuat untuk mengecoh model |
+| Typosquatting | Domain salah ketik yang disengaja, seperti `paypa1.com` |
+| Homograph | Huruf dari alfabet lain yang bentuknya mirip, seperti `а` Kiril dan `a` Latin |
+| Punycode | Cara menulis domain non-Latin dalam bentuk `xn--...` |
+| Regression test | Test yang memastikan sesuatu yang dulu benar tidak diam-diam rusak |
+| CORS | Aturan browser tentang situs mana yang boleh memanggil sebuah API |
+| CI | Pengecekan otomatis setiap kali kode di-push |
+| Cold start | Jeda saat server yang tertidur harus bangun dulu sebelum menjawab |
+| ZeroGPU | Jenis hardware gratis di Hugging Face Spaces untuk aplikasi Gradio |
+| PWA | Web yang bisa dipasang di HP seperti aplikasi |
+| Lockfile | File yang mencatat versi persis setiap library yang dipakai |
+| Advisory | Peringatan resmi bahwa versi library tertentu punya celah keamanan |
+| Drift | Perubahan pola data dari waktu ke waktu yang membuat model makin tidak akurat |
