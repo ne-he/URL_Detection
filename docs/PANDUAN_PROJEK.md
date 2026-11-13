@@ -76,3 +76,43 @@ Pengguna ketik URL di web
 **Langkah 6, keputusan.** `classify()` di `backend/app/main.py` menghitung P(phishing) = 1 dikurangi P(legitimate). Kalau hasilnya di atas threshold 0,5 (bisa diatur lewat env `PHISHING_THRESHOLD`), label jadi PHISHING. Untuk URL contoh, hasil live: **PHISHING, sumber `model`**. Angka probabilitas persisnya tidak tercatat di repo `[?]`.
 
 Sebagai pembanding, `github.com/login` yang dites hari yang sama dibaca LEGITIMATE dengan sumber `allowlist`. Ini penting nanti di bagian batasan, karena model sendirian justru menilai URL itu phishing.
+
+## 4. Peta kode: folder dan file penting
+
+| Path | Isinya apa |
+|---|---|
+| `backend/app/main.py` | Rute API (`/`, `/health`, `/predict`, `/predict/batch`), urutan lapis keputusan, fungsi `classify()` yang jadi satu-satunya tempat aturan label hidup |
+| `backend/app/predictor.py` | Muat bobot `.npz` dan MiniLM, warmup, forward pass numpy. Konvensi label dikunci di sini |
+| `backend/app/features.py` | 20 fitur leksikal. Dipakai training dan runtime dengan kode yang sama, urutan fitur dikunci |
+| `backend/app/threat.py` | Blocklist feed live, allowlist host, cek umur domain via RDAP (default mati) |
+| `backend/app/schemas.py` | Validasi request dan bentuk response (kompatibel dengan v1) |
+| `backend/app/config.py` | Semua setelan dari environment variable, tidak ada yang di-hardcode |
+| `backend/app.py` | Entrypoint Space: `gradio.Server` plus fungsi dummy `@spaces.GPU` supaya ZeroGPU mau start |
+| `backend/scripts/build_dataset.py` | Merakit `data_v2.csv` dari data v1, Tranco, domain Indonesia, dan feed phishing |
+| `backend/scripts/train_model.py` | Training MLP scikit-learn, cek bahwa forward pass numpy sama dengan sklearn, simpan `.npz` |
+| `backend/scripts/eval_report.py` | Menghasilkan `docs/EVAL.md` secara otomatis |
+| `backend/scripts/adversarial_set.py` | Set URL samaran buatan per teknik, plus kelompok kontrol URL sah |
+| `backend/models/` | `phishing_detection_weights.npz` (dipakai) dan `.h5` lama dari era Keras |
+| `backend/tests/` | Test schema, API dengan stub, fitur, threat, dan regression orientasi label |
+| `backend/training/training.ipynb` | Notebook training lama, disimpan sebagai referensi |
+| `src/app/config.ts` dan `config.test.ts` | URL backend default plus test yang menguncinya |
+| `src/app/components/` | UI: prediktor, analisis, globe 3D, gamifikasi, suara, PWA |
+| `.github/workflows/ci.yml` | CI tiga job: frontend, api-tests, model-regression |
+| `.github/workflows/keep-warm.yml` | Ping `/health` tiap 8 jam |
+| `docs/EVAL.md` | Laporan evaluasi lengkap, sumber semua angka di dokumen ini |
+
+## 5. Teknologi yang dipakai dan kenapa
+
+**all-MiniLM-L6-v2 (sentence-transformers).** Model kecil yang mengubah teks jadi vektor 384 dimensi. Dipilih karena ringan dan jalan di CPU. Kelemahannya diakui sendiri di `docs/EVAL.md`: MiniLM dilatih untuk kalimat bahasa Inggris, bukan URL, jadi di sini ia cuma dipakai sebagai encoder string serbaguna.
+
+**20 fitur leksikal buatan tangan.** Embedding tidak paham bahwa `.xyz` sering dipakai penipu atau bahwa tanda `@` di URL itu trik. Fitur seperti `risky_tld`, `has_at`, `has_ip`, `brand_mismatch`, dan `is_shortener` menambahkan pengetahuan domain itu secara eksplisit.
+
+**numpy untuk inference, bukan TensorFlow.** Model awalnya Keras. Masalahnya, TensorFlow tidak jalan di hardware ZeroGPU, satu-satunya tier gratis yang tersisa. Untuk tiga layer dense, TensorFlow memang berlebihan. Jadi model v2.2 dilatih pakai `MLPClassifier` scikit-learn, bobotnya disimpan ke `.npz`, dan forward pass ditulis ulang dengan numpy. Script training sendiri mengecek bahwa selisih numpy dan sklearn harus di bawah 1e-4.
+
+**FastAPI + Pydantic.** Validasi input otomatis, dokumentasi Swagger gratis di `/docs`, dan dependency injection yang memudahkan test pakai stub.
+
+**Gradio Server di Hugging Face ZeroGPU.** Docker Space dan CPU basic sekarang butuh langganan PRO. Akun gratis cuma bisa ZeroGPU untuk Gradio Space. `gradio.Server` adalah subclass FastAPI, jadi rute `/predict` yang sama bisa dipasang di situ. GPU-nya sendiri tidak dipakai, embedding dipaksa CPU.
+
+**React + Vite + PWA di Vercel.** Frontend warisan v1 (bagian yang dulu dikerjakan Nehemiah), sekarang diarahkan ke backend v2. Bisa dipasang seperti aplikasi di HP.
+
+**GitHub Actions.** Untuk CI dan untuk menjaga Space tetap bangun. Semua stack ini gratis, sesuai budget Rp 0.
