@@ -199,3 +199,47 @@ Satu catatan sejarah yang layak diingat: sebelum 6 Agustus, default URL backend 
 **Belum dikerjakan** (roadmap README): data legitimate dengan path asli, retraining terjadwal, logging prediksi dan monitoring drift, serta fingerprint dataset di dalam file model.
 
 **Dokumen yang sudah basi di repo.** `docs/ARCHITECTURE.md` masih menggambar predictor Keras `.h5`, dan `flow/flow.md` masih menyebut "PhishGuard v3.0", model Keras, dan akurasi training 97,08%. Keduanya tidak mencerminkan kode sekarang. Yang benar adalah kode, README, dan `docs/EVAL.md`.
+
+## 10. Cara menjalankan dan deploy
+
+Semua sekaligus pakai Docker (dari root repo):
+
+```bash
+docker compose up --build
+# API:       http://localhost:7860/docs
+# Frontend:  http://localhost:5173
+```
+
+Frontend saja. Tanpa env apa pun, frontend sudah memanggil Space live. Isi `VITE_API_BASE` di `.env.local` kalau mau mengarah ke backend lokal:
+
+```bash
+npm install
+npm run dev
+npm test
+```
+
+Backend lokal tanpa Docker (Python 3.12):
+
+```bash
+cd backend
+pip install -r requirements.txt
+uvicorn app.main:app --port 7860
+```
+
+Test backend ringan, tanpa model asli:
+
+```bash
+cd backend
+pip install -r requirements-dev.txt
+PYTHONPATH=. pytest tests -q
+```
+
+Environment variable yang dipakai: `FRONTEND_ORIGINS`, `PHISHING_THRESHOLD`, `MODEL_PATH`, `EMBEDDER_NAME`, `EMBEDDER_DEVICE`, `MAX_URL_LENGTH`, `ENABLE_BLOCKLIST`, `ENABLE_DOMAIN_AGE` (backend), serta `VITE_API_BASE` dan `VITE_FEATURE_*` (frontend).
+
+**Deploy backend.** Isi folder `backend/` di-push ke remote git Space `ne-he/phisguard-api`. Space tidak punya sumber kode terpisah. Langkah persisnya ada di bagian Deploy README.md.
+
+**Deploy frontend.** Project Vercel `url-detection-one` terhubung ke branch main repo ini dan build otomatis.
+
+**Jaga Space bangun.** Space tidur setelah 48 jam tanpa traffic. `keep-warm.yml` ping `/health` tiap 8 jam, frontend ping `/health` saat halaman dibuka, dan request prediksi punya mekanisme coba ulang.
+
+**Jangan lupa:** hci-update.vercel.app tersambung ke repo kelompok pada commit lama dengan backend `127.0.0.1:8000` yang ditulis mati. Push ke repo ini tidak akan mengubah situs itu.
