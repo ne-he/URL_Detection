@@ -158,3 +158,44 @@ README.md membulatkan ROC-AUC holdout jadi 0,983. Angka "sekitar 0,985" yang ber
 **Threshold dari env.** Tabel di `docs/EVAL.md` menunjukkan efeknya. Threshold 0,7 menaikkan recall ke 96,80% tapi false positive naik dari 22 ke 34. Ini keputusan operasional, jadi tempatnya di konfigurasi.
 
 **Recall diutamakan.** Phishing yang lolos bisa berujung password dicuri. Salah tuduh cuma bikin jengkel. Karena itu recall ditebalkan di README, dengan catatan bahwa false positive tetap bukan gratis.
+
+## 8. Update terbaru
+
+| Tanggal | Commit | Isi |
+|---|---|---|
+| 27 Mei 2026 | 702917f | Commit terakhir era v1 di riwayat repo ini |
+| 15 Jul 2026 | 3852a07 | Backend v2 ditulis ulang: health jujur, validasi ketat, test orientasi label |
+| 18 Jul 2026 | 2d6c66d sampai 54e15e7 | Frontend digabung ke repo ini. Perjalanan deploy ke HF: Docker ternyata terkunci PRO, pindah ke Gradio, TensorFlow dibuang, inference numpy, ZeroGPU dibereskan |
+| 20 Jul 2026 | 49d9c20 | v2.2: detektor berlapis (MiniLM + fitur leksikal + allowlist/blocklist), dataset baru |
+| 3 Agu 2026 | cada62a | Laporan evaluasi v2.2, set adversarial, CI yang tidak bisa hijau diam-diam |
+| 6 Agu 2026 | 4d7ffee, bde7f74 | Default API frontend diarahkan ke Space sendiri dan dikunci test. Dokumentasi deploy |
+| 7 sampai 8 Agu 2026 | 6a93b89, 3d389a6 | URL frontend live dicatat, halaman About, penanganan cold start |
+| 13 Agu 2026 | abad6d3 | Kepemilikan projek dipertegas di About, README, LICENSE, package.json |
+| 28 Sep 2026 | ce85ba5 | Em dash dibuang dari komentar, docstring, dan teks UI |
+| 11 Nov 2026 | 7a55267 | Lockfile disegarkan untuk menutup 4 advisory dependency |
+
+Detail update 11 November 2026: `npm audit` menandai react-router (high), lodash (high, lewat recharts dan workbox-build), fflate (moderate), dan yaml (moderate). Keempatnya punya perbaikan di dalam rentang versi yang sudah ada, jadi yang berubah cuma `package-lock.json`. Test frontend lolos, build sukses, halaman Home dan About dicek tampil tanpa error dan tersambung ke API live. Prediksi live juga dites: `github.com/login` dibaca LEGITIMATE (sumber allowlist) dan `paypa1-secure-verify.account-update.xyz/login.php` dibaca PHISHING (sumber model).
+
+Satu catatan sejarah yang layak diingat: sebelum 6 Agustus, default URL backend di frontend menunjuk ke Space milik kolaborator v1 yang menjalankan model v1. Build yang lupa mengisi env diam-diam mengirim URL pengunjung ke server orang lain. Sekarang default itu dikunci `src/app/config.test.ts`.
+
+## 9. Batasan jujur dan yang belum dikerjakan
+
+**Model terlalu curiga pada halaman login sah.** Ini batasan paling serius. Model sendirian menilai `github.com/login` dengan P(legitimate) 0,000. Dugaan penyebabnya ada di data: kelas legitimate didominasi domain telanjang dari Tranco tanpa path, sedangkan phishing hampir selalu punya path. Model jadi belajar "ada path berarti phishing". Skor adversarial yang bagus sebagian besar ikut terangkat oleh bias itu, bukan karena model benar-benar mengenali penyamaran.
+
+**Allowlist tulisan tangan tidak bisa membesar mengikuti internet.** Sekitar 57 domain, dan subdomain seperti `student.binus.ac.id` tidak tercakup.
+
+**Holdout berasal dari snapshot yang sama.** Feed phishing diambil satu hari, 20 Juli 2026. Angka 95,70% menjawab "bisa mengenali kampanye yang ada di data", bukan "bisa mengenali kampanye baru tadi pagi". Evaluasi berbasis waktu belum dibuat.
+
+**Asal-usul dataset v1 tidak tercatat.** `data.csv` (80.974 baris) diwarisi dari tugas kelompok, dan sumber, tanggal, serta lisensinya tidak diketahui.
+
+**Angka tidak bisa direproduksi dari repo saja.** Dataset penuh tidak di-commit. Yang ada cuma `sample_100.csv`, itu pun potongan data v1.
+
+**Model hanya melihat string URL.** Tidak ada isi halaman, sertifikat, atau WHOIS.
+
+**CORS di Space belum ketat.** `gradio.Server` memantulkan Origin apa saja, jadi `FRONTEND_ORIGINS` praktis tidak berlaku di sana. Dampaknya rendah karena API tidak memakai cookie atau login, tapi tetap tidak sesuai yang diklaim konfigurasi.
+
+**Keep-warm bukan jaminan.** GitHub mematikan workflow terjadwal di repo yang 60 hari tanpa commit.
+
+**Belum dikerjakan** (roadmap README): data legitimate dengan path asli, retraining terjadwal, logging prediksi dan monitoring drift, serta fingerprint dataset di dalam file model.
+
+**Dokumen yang sudah basi di repo.** `docs/ARCHITECTURE.md` masih menggambar predictor Keras `.h5`, dan `flow/flow.md` masih menyebut "PhishGuard v3.0", model Keras, dan akurasi training 97,08%. Keduanya tidak mencerminkan kode sekarang. Yang benar adalah kode, README, dan `docs/EVAL.md`.
