@@ -1,5 +1,7 @@
 # PhishGuard v2 Architecture
 
+> **Note (Nov 2026):** parts of this page still describe the older Keras `.h5` predictor. The current pipeline (v2.2: live blocklist, exact-host allowlist, then MiniLM embeddings plus 20 lexical features in a numpy-only dense network) is described in `README.md`, `docs/EVAL.md` and `docs/PANDUAN_PROJEK.md`.
+
 ```
                        ┌──────────────────────────────────────────┐
  client / demo page ──►│ FastAPI (app/main.py)                    │
