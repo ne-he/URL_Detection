@@ -116,3 +116,45 @@ Sebagai pembanding, `github.com/login` yang dites hari yang sama dibaca LEGITIMA
 **React + Vite + PWA di Vercel.** Frontend warisan v1 (bagian yang dulu dikerjakan Nehemiah), sekarang diarahkan ke backend v2. Bisa dipasang seperti aplikasi di HP.
 
 **GitHub Actions.** Untuk CI dan untuk menjaga Space tetap bangun. Semua stack ini gratis, sesuai budget Rp 0.
+
+## 6. Angka dan bukti
+
+Semua angka di bawah diambil dari file di repo, bukan dari ingatan.
+
+**Holdout ketat** (1.000 URL yang tidak pernah masuk training, 500 phishing dan 500 legitimate, threshold 0,5). Sumber: `docs/EVAL.md` Bagian 1, dihasilkan `eval_report.py` pada 2 Agustus 2026.
+
+| Metrik (kelas positif = phishing) | Test split internal (n=3.000) | Holdout ketat (n=1.000) |
+|---|---|---|
+| Accuracy | 95,87% | 95,70% |
+| Precision | 95,93% | 95,61% |
+| Recall | 95,80% | 95,80% |
+| F1 | 95,86% | 95,70% |
+| ROC-AUC | 0,9846 | 0,9828 |
+
+README.md membulatkan ROC-AUC holdout jadi 0,983. Angka "sekitar 0,985" yang beredar di catatan lama sebenarnya milik test split internal (0,9846), bukan holdout.
+
+**Confusion matrix holdout** (sumber: `docs/EVAL.md`): 479 phishing tertangkap, **21 phishing lolos**, 22 situs sah salah dituduh, 478 situs sah benar.
+
+**Set adversarial** (sumber: `docs/EVAL.md` Bagian 2): 49 dari 50 URL phishing samaran tertangkap. Satu-satunya yang lolos adalah homograph `bсa.co.id` dengan huruf Kiril.
+
+**Kelompok kontrol 15 URL login sah** (sumber yang sama): model sendirian cuma benar 3 dari 15. Setelah allowlist ikut bekerja, pipeline masih salah tuduh 9 dari 15, termasuk `accounts.google.com`, `www.paypal.com/signin`, dan `ibank.klikbca.com`.
+
+**Dataset** (sumber: `backend/README.md`): `data_v2.csv` berisi 132.742 baris (68.944 phishing, 63.798 legitimate), dirakit 20 Juli 2026. Model dilatih pada subsample seimbang 20.000 URL (seed 42), dibagi 85/15.
+
+**Test** (sumber: README.md): 37 test, yaitu 33 test backend dan 4 test frontend. Saya tidak menjalankan ulang test untuk dokumen ini. Lockfile 11 November dicatat lolos test dan build (sumber: pesan commit 7a55267).
+
+## 7. Keputusan desain penting
+
+**Lapis berurutan: blocklist, allowlist, baru model.** Blocklist menang paling depan karena satu halaman phishing bisa saja numpang di domain sah yang dibobol. Fakta di feed lebih bisa dipercaya daripada tebakan model. Trade-off-nya, allowlist ternyata jadi penopang utama, bukan pelengkap (lihat bagian 9).
+
+**Allowlist pakai host persis, bukan "mengandung".** Aman dari trik subdomain seperti `paypal.com.attacker.net`. Ongkosnya: `student.binus.ac.id/login` tidak ikut terlindungi walaupun `binus.ac.id` ada di daftar, dan memang tercatat sebagai false positive di EVAL.
+
+**Fail loud, run degraded.** Kalau model gagal dimuat, proses tetap hidup, tapi `/health` membalas 503 beserta alasan error aslinya, dan `/` melaporkan `degraded`. Ini kebalikan langsung dari v1 yang bilang "Ready" padahal rusak.
+
+**Predictor sebagai protocol.** `main.py` tidak tahu soal torch atau bobot. Test API memakai stub, jadi bisa jalan di mana saja dalam hitungan detik tanpa memasang paket ML yang berat.
+
+**Orientasi label dikunci test.** Di data, `ClassLabel` 1 berarti legitimate dan 0 berarti phishing, dan sigmoid mengeluarkan P(legitimate). Kalau suatu hari model dilatih ulang dengan encoder label yang terbalik, semua vonis ikut terbalik tanpa ada error. `backend/tests/test_label_orientation.py` mencegah itu dengan dua URL jangkar: `https://www.google.com` wajib dinilai aman dan `http://58.23.215.31:8765/wzoptup.exe` wajib dinilai phishing. Test ini butuh model asli, dan kalau model tidak tersedia ia di-skip. Masalahnya, skip membuat pytest tetap keluar dengan kode sukses. Jadi job `model-regression` di CI sengaja mencari tulisan "passed" di output dan menggagalkan build kalau tidak ketemu.
+
+**Threshold dari env.** Tabel di `docs/EVAL.md` menunjukkan efeknya. Threshold 0,7 menaikkan recall ke 96,80% tapi false positive naik dari 22 ke 34. Ini keputusan operasional, jadi tempatnya di konfigurasi.
+
+**Recall diutamakan.** Phishing yang lolos bisa berujung password dicuri. Salah tuduh cuma bikin jengkel. Karena itu recall ditebalkan di README, dengan catatan bahwa false positive tetap bukan gratis.
