@@ -243,3 +243,39 @@ Environment variable yang dipakai: `FRONTEND_ORIGINS`, `PHISHING_THRESHOLD`, `MO
 **Jaga Space bangun.** Space tidur setelah 48 jam tanpa traffic. `keep-warm.yml` ping `/health` tiap 8 jam, frontend ping `/health` saat halaman dibuka, dan request prediksi punya mekanisme coba ulang.
 
 **Jangan lupa:** hci-update.vercel.app tersambung ke repo kelompok pada commit lama dengan backend `127.0.0.1:8000` yang ditulis mati. Push ke repo ini tidak akan mengubah situs itu.
+
+## 11. Cara menjelaskan ke rekruter
+
+**Pitch 30 detik (Indonesia):**
+
+"PhishGuard itu pendeteksi link phishing. Awalnya projek kuliah kelompok, saya pegang frontend. Backend-nya waktu itu rapuh: bilang siap padahal model gagal dimuat, tanpa validasi, tanpa test. Jadi saya bangun ulang sendiri. Sekarang ada tiga lapis: daftar hitam phishing live, daftar putih, lalu model MiniLM plus 20 fitur yang jalan pakai numpy di Hugging Face gratis. Di holdout 1.000 URL akurasinya 95,7% dan recall 95,8%. Tapi bagian yang paling saya banggakan justru laporan evaluasinya, karena di situ saya tunjukkan sendiri bahwa modelnya terlalu curiga ke halaman login asli, dan kenapa."
+
+**Pitch 30 seconds (English):**
+
+"PhishGuard flags phishing links. It started as a group project at university where I did the frontend. The original backend claimed it was ready even when the model failed to load, had no input validation, and no tests, so I rebuilt it on my own. It now has three layers: a live phishing blocklist, an allowlist, then a MiniLM plus 20 lexical features model running in plain numpy on a free Hugging Face Space. On a 1,000 URL holdout it hits 95.7% accuracy and 95.8% recall. What I'm proudest of is the evaluation report, where I show that the model is over-suspicious of real login pages and explain why."
+
+**Pertanyaan yang mungkin muncul:**
+
+**1. "Ini projek kelompok ya?"**
+Versi pertamanya iya, tugas kuliah kelompok 7 orang, dan bagian saya waktu itu frontend. Versi itu masih online di hci-update.vercel.app sebagai arsip. v2 saya kerjakan sendiri: dataset baru, model, backend, lapis blocklist dan allowlist, test, evaluasi, dan deploy. Bagian UI warisan v1 tetap dicantumkan di LICENSE sesuai lisensi MIT.
+
+**2. "Kenapa tidak pakai TensorFlow saja?"**
+TensorFlow tidak jalan di ZeroGPU, satu-satunya tier gratis Hugging Face yang masih tersedia. Modelnya cuma tiga layer dense, jadi saya latih pakai scikit-learn, simpan bobotnya, dan tulis forward pass dengan numpy. Script training memverifikasi hasil numpy sama dengan sklearn.
+
+**3. "Akurasi 95,7% itu bagus dong?"**
+Di atas kertas iya, tapi saya tidak mau dibaca begitu. Holdout-nya berasal dari snapshot feed yang sama dengan data latih, jadi itu batas atas. Kelompok kontrol menunjukkan model sendirian salah menilai 12 dari 15 URL login asli. Masalahnya ada di komposisi data, bukan di arsitektur model.
+
+**4. "Kenapa recall lebih penting dari accuracy?"**
+Phishing yang lolos bisa berujung password atau kartu dicuri. Salah tuduh cuma bikin pengguna jengkel. Biayanya tidak setara, jadi saya laporkan recall dan jumlah phishing yang lolos secara terpisah, plus tabel efek kalau threshold digeser.
+
+**5. "Bagaimana kamu tahu model hasil retrain tidak rusak?"**
+Ada regression test dengan dua URL jangkar yang mengunci arti label. Kalau label tertukar, test gagal. Karena test itu bisa ter-skip dan tetap terlihat hijau, CI saya buat mengecek jumlah test yang benar-benar lulus.
+
+**6. "Apa yang terjadi kalau model gagal dimuat di server?"**
+Server tetap hidup, tapi `/health` membalas 503 dengan alasan error yang asli. Frontend dan orang yang memantau langsung tahu servisnya sakit. Di v1, server justru bilang Ready.
+
+**7. "Kalau dikasih waktu lagi, apa yang kamu perbaiki dulu?"**
+Data kelas legitimate. Tambah URL sah yang punya path, query, dan alur login sungguhan, lalu evaluasi berbasis waktu: latih sebelum tanggal X, uji setelahnya. Setelah itu baru logging prediksi dan monitoring drift.
+
+**8. "Berapa biaya hosting-nya?"**
+Nol. Frontend di Vercel, backend di Hugging Face Space gratis, CI dan keep-warm di GitHub Actions.
